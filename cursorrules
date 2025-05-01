@@ -1,0 +1,33 @@
+{
+  "rules": [
+    {
+      "pattern": ".*\\.(js|jsx|py|html)$",
+      "action": "update_documentation",
+      "documentation_file": "documentation.md"
+    },
+    {
+      "pattern": ".*\\.(js|jsx|py|html)$",
+      "action": "update_changelog",
+      "changelog_file": "CHANGELOG.md"
+    }
+  ],
+  "guidelines": {
+    "node_modules": {
+      "removal": {
+        "priority": "last_resort",
+        "conditions": [
+          "All other troubleshooting steps have failed",
+          "Explicit user approval obtained",
+          "Clear evidence that package versions are corrupted",
+          "Documentation of attempted fixes before removal"
+        ],
+        "required_actions": [
+          "Explain why removal is necessary",
+          "List alternative solutions tried",
+          "Get explicit user approval",
+          "Document the process in changelog"
+        ]
+      }
+    }
+  }
+} 
