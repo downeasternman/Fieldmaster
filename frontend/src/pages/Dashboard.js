@@ -6,10 +6,14 @@ import {
   CardContent,
   Typography,
   Paper,
+  Container,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { appointments } from '../services/api';
 
 const localizer = momentLocalizer(moment);
 
@@ -22,30 +26,51 @@ function Dashboard() {
     completed: 0,
     cancelled: 0,
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const response = await appointments.getAll();
+        console.log('API Response:', response.data);
+        setAppointments(response.data);
+        setLoading(false);
+        
+        // Calculate statistics
+        const stats = {
+          total: response.data.length,
+          scheduled: response.data.filter(a => a.status === 'scheduled').length,
+          inProgress: response.data.filter(a => a.status === 'in_progress').length,
+          completed: response.data.filter(a => a.status === 'completed').length,
+          cancelled: response.data.filter(a => a.status === 'cancelled').length,
+        };
+        setStats(stats);
+      } catch (err) {
+        console.error('API Error:', err);
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
     fetchAppointments();
   }, []);
 
-  const fetchAppointments = async () => {
-    try {
-      const response = await fetch('http://localhost:8000/api/appointments/');
-      const data = await response.json();
-      setAppointments(data);
-      
-      // Calculate statistics
-      const stats = {
-        total: data.length,
-        scheduled: data.filter(a => a.status === 'scheduled').length,
-        inProgress: data.filter(a => a.status === 'in_progress').length,
-        completed: data.filter(a => a.status === 'completed').length,
-        cancelled: data.filter(a => a.status === 'cancelled').length,
-      };
-      setStats(stats);
-    } catch (error) {
-      console.error('Error fetching appointments:', error);
-    }
-  };
+  if (loading) {
+    return (
+      <Container>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container>
+        <Alert severity="error">Error: {error}</Alert>
+      </Container>
+    );
+  }
 
   const events = appointments.map(appointment => ({
     title: `${appointment.customer.first_name} ${appointment.customer.last_name}`,
@@ -78,7 +103,7 @@ function Dashboard() {
   };
 
   return (
-    <Box>
+    <Container>
       <Typography variant="h4" gutterBottom>
         Dashboard
       </Typography>
@@ -144,7 +169,7 @@ function Dashboard() {
           eventPropGetter={eventStyleGetter}
         />
       </Paper>
-    </Box>
+    </Container>
   );
 }
 

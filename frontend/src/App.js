@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Appointments from './pages/Appointments';
 import Customers from './pages/Customers';
 import Technicians from './pages/Technicians';
+import Login from './pages/Login';
 
 const theme = createTheme({
   palette: {
@@ -24,14 +25,15 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/appointments" element={<Appointments />} />
-            <Route path="/customers" element={<Customers />} />
-            <Route path="/technicians" element={<Technicians />} />
-          </Routes>
-        </Layout>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="appointments" element={<Appointments />} />
+            <Route path="customers" element={<Customers />} />
+            <Route path="technicians" element={<Technicians />} />
+          </Route>
+        </Routes>
       </Router>
     </ThemeProvider>
   );
