@@ -24,6 +24,7 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Fixed logo loading issues by replacing PNG with SVG format
 - Configured CORS headers for secure API communication
 - Fixed appointments API naming conflict in Dashboard component
+- Fixed API authentication issues by temporarily allowing unauthenticated access
 
 ### Changed
 - Updated documentation with Mermaid diagrams and code examples
@@ -33,6 +34,7 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Added axios for API communication
 - Configured CORS settings for secure frontend-backend communication
 - Updated manifest.json to use SVG logo format
+- Modified REST Framework permissions for development environment
 
 ## [0.1.0] - 2025-05-01
 
