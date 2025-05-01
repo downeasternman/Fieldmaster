@@ -23,6 +23,7 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Updated cursorrules to prevent unnecessary node_modules removal
 - Fixed logo loading issues by replacing PNG with SVG format
 - Configured CORS headers for secure API communication
+- Fixed appointments API naming conflict in Dashboard component
 
 ### Changed
 - Updated documentation with Mermaid diagrams and code examples

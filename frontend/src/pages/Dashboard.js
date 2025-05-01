@@ -13,7 +13,7 @@ import {
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import { appointments } from '../services/api';
+import { appointments as appointmentsApi } from '../services/api';
 
 const localizer = momentLocalizer(moment);
 
@@ -32,7 +32,7 @@ function Dashboard() {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const response = await appointments.getAll();
+        const response = await appointmentsApi.getAll();
         console.log('API Response:', response.data);
         setAppointments(response.data);
         setLoading(false);
