@@ -255,4 +255,53 @@ fieldmaster/
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Database Management
+
+### Database Migrations Strategy
+FieldMaster uses Django's built-in migration system to manage database schema changes.
+
+- **Creating Migrations:**
+  - Run `python manage.py makemigrations` after modifying models.
+- **Applying Migrations:**
+  - Run `python manage.py migrate` to apply migrations to the database.
+- **Rolling Back Migrations:**
+  - Use `python manage.py migrate <app_name> <migration_number>` to revert to a previous migration.
+- **Best Practices:**
+  - Always review generated migrations before applying.
+  - Test migrations on a staging environment before production.
+  - For long-lived projects, periodically squash migrations to keep the migration history manageable.
+
+### Database Backup System
+Regular database backups are critical for disaster recovery.
+
+- **Manual Backup:**
+  - Use `pg_dump` to create a backup:  
+    `pg_dump -U <db_user> -h <db_host> -F c -b -v -f backup_file.dump <db_name>`
+- **Manual Restore:**
+  - Use `pg_restore` to restore:  
+    `pg_restore -U <db_user> -h <db_host> -d <db_name> -v backup_file.dump`
+- **Automated Backups:**
+  - Schedule daily backups using cron jobs or task scheduler.
+  - Store backups offsite or in cloud storage for redundancy.
+- **Testing Backups:**
+  - Periodically test restoring from backups to ensure data integrity.
+
+### Database Monitoring
+Monitoring helps detect issues before they impact users.
+
+- **Recommended Tools:**
+  - [pgAdmin](https://www.pgadmin.org/) for database management and monitoring.
+  - [pg_stat_statements](https://www.postgresql.org/docs/current/pgstatstatements.html) for query performance.
+  - External services: Datadog, New Relic, AWS RDS monitoring, etc.
+- **Key Metrics to Monitor:**
+  - Connection count
+  - Slow queries
+  - Replication lag (if applicable)
+  - Disk usage
+  - CPU and memory usage
+- **Alerting:**
+  - Set up alerts for critical issues (e.g., out-of-disk, high latency, failed backups).
+- **Enabling Monitoring:**
+  - Enable and configure monitoring tools in both development and production environments. 
