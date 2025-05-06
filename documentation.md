@@ -1,299 +1,189 @@
-# FieldMaster Appointment System Documentation
+# FieldMaster Documentation
 
-## Project Structure Overview
+## Overview
+FieldMaster is a comprehensive field service management system designed to streamline appointment scheduling, customer management, and billing operations. The system is built using Django for the backend and React for the frontend.
+
+## System Architecture
 
 ```mermaid
 graph TD
-    A[FieldMaster] --> B[Backend]
-    A --> C[Frontend]
-    B --> D[Django]
-    B --> E[PostgreSQL]
-    C --> F[React]
-    C --> G[Material-UI]
-    D --> H[Models]
-    D --> I[Views]
-    D --> J[Serializers]
-    F --> K[Components]
-    F --> L[Pages]
+    A[React Frontend] --> B[Django Backend]
+    B --> C[PostgreSQL Database]
+    B --> D[Authentication Service]
+    B --> E[File Storage]
 ```
 
-## Backend Structure
+## Core Features
 
-### Django Project Files
+### 1. Appointment Management
+- Create, edit, and delete appointments
+- Assign technicians to appointments
+- Set appointment priorities (Low, Medium, High, Emergency)
+- Track appointment status (Scheduled, In Progress, Completed, Cancelled)
+- Automatic bill creation for new appointments
+- Date and time handling with proper validation
+- Default time slots (9 AM - 10 AM) for unknown times
+- Graceful error handling for time input issues
 
-#### `fieldmaster/settings.py`
-```python
-# Database Configuration
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'fieldmaster',
-        'USER': 'postgres',
-        'PASSWORD': 'password',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
+### 2. Customer Management
+- Comprehensive customer profiles
+- Contact information management
+- Service history tracking
+- Support for walk-in/cash customers
+- Quick customer creation from billing interface
+- Customer search and filtering
 
-# REST Framework Settings
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-}
-```
+### 3. Billing System
+- Support for both bills and estimates
+- Line item management with automatic calculations
+- Multiple status tracking (Draft, Sent, Paid, Overdue, Cancelled)
+- Optional customer association
+- Employee name tracking
+- Due date management
+- Notes and descriptions
+- Automatic total calculation
+- Support for walk-in/cash customers
+- Quick customer creation from bill form
+- Notes display on bill cards
 
-#### `fieldmaster/urls.py`
-- **Purpose**: Main URL routing configuration
-- **Structure**:
-  - Admin interface URL
-  - API endpoints routing
-  - Media file serving configuration
+### 4. Technician Management
+- Technician profiles with availability tracking
+- Assignment to appointments
+- Performance metrics
+- Schedule management
 
-### Appointments App
+## API Endpoints
 
-#### `appointments/models.py`
+### Appointments
+- `GET /api/appointments/` - List all appointments
+- `POST /api/appointments/` - Create new appointment
+- `GET /api/appointments/{id}/` - Get appointment details
+- `PUT /api/appointments/{id}/` - Update appointment
+- `DELETE /api/appointments/{id}/` - Delete appointment
+
+### Customers
+- `GET /api/customers/` - List all customers
+- `POST /api/customers/` - Create new customer
+- `GET /api/customers/{id}/` - Get customer details
+- `PUT /api/customers/{id}/` - Update customer
+- `DELETE /api/customers/{id}/` - Delete customer
+
+### Bills
+- `GET /api/bills/` - List all bills
+- `POST /api/bills/` - Create new bill
+- `GET /api/bills/{id}/` - Get bill details
+- `PUT /api/bills/{id}/` - Update bill
+- `DELETE /api/bills/{id}/` - Delete bill
+
+### Technicians
+- `GET /api/technicians/` - List all technicians
+- `POST /api/technicians/` - Create new technician
+- `GET /api/technicians/{id}/` - Get technician details
+- `PUT /api/technicians/{id}/` - Update technician
+- `DELETE /api/technicians/{id}/` - Delete technician
+
+## Data Models
+
+### Appointment
 ```python
 class Appointment(models.Model):
-    STATUS_CHOICES = [
-        ('scheduled', 'Scheduled'),
-        ('in_progress', 'In Progress'),
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled'),
-    ]
-
-    PRIORITY_CHOICES = [
-        ('low', 'Low'),
-        ('medium', 'Medium'),
-        ('high', 'High'),
-        ('emergency', 'Emergency'),
-    ]
-
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    technician = models.ForeignKey(Technician, on_delete=models.SET_NULL, null=True)
+    customer = models.ForeignKey(Customer)
+    technician = models.ForeignKey(Technician, null=True, blank=True)
     appointment_date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
-    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES)
+    description = models.TextField()
+    status = models.CharField(choices=STATUS_CHOICES)
+    priority = models.CharField(choices=PRIORITY_CHOICES)
+    notes = models.TextField(blank=True)
 ```
 
-#### `appointments/serializers.py`
-- **Purpose**: Converts model instances to JSON and vice versa
-- **Serializers**:
-  - `CustomerSerializer`: Handles customer data serialization
-  - `TechnicianSerializer`: Handles technician data serialization
-  - `AppointmentSerializer`: Handles appointment data serialization
-  - `AppointmentPhotoSerializer`: Handles photo data serialization
-
-#### `appointments/views.py`
+### Bill
 ```python
-class AppointmentViewSet(viewsets.ModelViewSet):
-    queryset = Appointment.objects.all()
-    serializer_class = AppointmentSerializer
-    permission_classes = [IsAuthenticated]
-
-    @action(detail=True, methods=['post'])
-    def upload_photo(self, request, pk=None):
-        appointment = self.get_object()
-        serializer = AppointmentPhotoSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(appointment=appointment)
-            return Response(serializer.data)
-        return Response(serializer.errors)
+class Bill(models.Model):
+    customer = models.ForeignKey(Customer, null=True, blank=True)
+    appointment = models.ForeignKey(Appointment, null=True, blank=True)
+    type = models.CharField(choices=[('bill', 'Bill'), ('estimate', 'Estimate')])
+    status = models.CharField(choices=STATUS_CHOICES)
+    description = models.TextField(blank=True)
+    notes = models.TextField(blank=True)
+    due_date = models.DateField(null=True, blank=True)
+    employee_name = models.CharField(max_length=100, blank=True)
 ```
 
-#### `appointments/urls.py`
-- **Purpose**: Defines API endpoint URLs
-- **Routes**:
-  - `/api/customers/`
-  - `/api/technicians/`
-  - `/api/appointments/`
-  - `/api/photos/`
-
-#### `appointments/admin.py`
-- **Purpose**: Configures the Django admin interface
-- **Admin Classes**:
-  - `CustomerAdmin`: Customizes customer admin view
-  - `TechnicianAdmin`: Customizes technician admin view
-  - `AppointmentAdmin`: Customizes appointment admin view
-  - `AppointmentPhotoAdmin`: Customizes photo admin view
-
-## Frontend Structure
-
-### React App Files
-
-#### `frontend/src/App.js`
-```javascript
-function App() {
-  return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/appointments" element={<Appointments />} />
-            <Route path="/customers" element={<Customers />} />
-            <Route path="/technicians" element={<Technicians />} />
-          </Routes>
-        </Layout>
-      </Router>
-    </ThemeProvider>
-  );
-}
+### BillLineItem
+```python
+class BillLineItem(models.Model):
+    bill = models.ForeignKey(Bill, related_name='line_items')
+    description = models.CharField(max_length=255)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    notes = models.TextField(blank=True)
 ```
 
-#### `frontend/src/components/Layout.js`
-- **Purpose**: Main layout component with navigation
-- **Features**:
-  - Responsive drawer
-  - App bar with title
-  - Navigation menu
-  - Mobile-friendly design
+## Recent Updates
 
-### Page Components
+### Billing System Improvements
+- Added support for walk-in/cash customers
+- Implemented employee name tracking
+- Added notes display on bill cards
+- Improved customer creation workflow
+- Enhanced line item management
+- Added automatic total calculations
 
-#### `frontend/src/pages/Dashboard.js`
-- **Purpose**: Main dashboard page
-- **Features**:
-  - Appointment statistics
-  - Calendar view
-  - Status cards
-  - Event styling based on status
+### Appointment Handling
+- Improved date/time input handling
+- Added default time slots
+- Enhanced error handling
+- Fixed time format issues
+- Added graceful fallbacks for invalid times
 
-#### `frontend/src/pages/Appointments.js`
-```javascript
-function Appointments() {
-  const [appointments, setAppointments] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    customer: '',
-    technician: '',
-    appointment_date: new Date(),
-    start_time: new Date(),
-    end_time: new Date(),
-    status: 'scheduled',
-    priority: 'medium',
-  });
+### Customer Management
+- Added support for walk-in customers
+- Improved customer creation workflow
+- Enhanced customer display in bills
+- Added quick customer creation from billing interface
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch('http://localhost:8000/api/appointments/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-      if (response.ok) {
-        fetchAppointments();
-        handleClose();
-      }
-    } catch (error) {
-      console.error('Error saving appointment:', error);
-    }
-  };
-}
-```
+## Development Guidelines
 
-#### `frontend/src/pages/Customers.js`
-- **Purpose**: Customer management page
-- **Features**:
-  - Customer list view
-  - Create/edit customer form
-  - Contact information management
-  - Address management
+### Frontend
+- Use Material-UI components for consistent styling
+- Implement proper error handling
+- Use date-fns for date/time formatting
+- Follow React best practices
+- Maintain responsive design
 
-#### `frontend/src/pages/Technicians.js`
-- **Purpose**: Technician management page
-- **Features**:
-  - Technician list view
-  - Create/edit technician form
-  - Availability management
-  - User account management
+### Backend
+- Follow Django best practices
+- Implement proper validation
+- Use Django REST Framework features
+- Maintain clean code structure
+- Handle errors gracefully
 
-## Configuration Files
+## Deployment
 
-### `requirements.txt`
-- **Purpose**: Lists Python package dependencies
-- **Key Dependencies**:
-  - Django
-  - Django REST Framework
-  - Django CORS Headers
-  - Pillow (for image handling)
-  - psycopg2-binary (PostgreSQL adapter)
-  - python-dotenv (environment variables)
+### Requirements
+- Python 3.8+
+- Node.js 14+
+- PostgreSQL 12+
+- Django 5.2
+- React 18+
 
-### `frontend/package.json`
-- **Purpose**: Lists Node.js package dependencies
-- **Key Dependencies**:
-  - React
-  - Material-UI
-  - React Router
-  - React Big Calendar
-  - Date handling libraries
+### Setup
+1. Clone the repository
+2. Install backend dependencies: `pip install -r requirements.txt`
+3. Install frontend dependencies: `cd frontend && npm install`
+4. Set up the database
+5. Run migrations: `python manage.py migrate`
+6. Start the development server: `python manage.py runserver`
+7. Start the frontend: `cd frontend && npm start`
 
-### `.env`
-- **Purpose**: Environment variables configuration
-- **Variables**:
-  - DEBUG mode
-  - Secret key
-  - Allowed hosts
-  - Database URL
+## Contributing
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
-### `.gitignore`
-- **Purpose**: Specifies files to ignore in version control
-- **Categories**:
-  - Python-specific files
-  - Node.js files
-  - Environment files
-  - IDE configurations
-  - OS-specific files
-
-## README.md
-- **Purpose**: Project documentation and setup instructions
-- **Sections**:
-  - Features overview
-  - Setup instructions
-  - API endpoints
-  - Development guidelines
-  - License information
-
-## Data Flow Diagram
-
-```mermaid
-sequenceDiagram
-    participant Client
-    participant React
-    participant Django
-    participant PostgreSQL
-
-    Client->>React: User Action
-    React->>Django: API Request
-    Django->>PostgreSQL: Database Query
-    PostgreSQL-->>Django: Query Result
-    Django-->>React: API Response
-    React-->>Client: UI Update
-```
-
-## Component Relationships
-
-```mermaid
-graph LR
-    A[Layout] --> B[Dashboard]
-    A --> C[Appointments]
-    A --> D[Customers]
-    A --> E[Technicians]
-    C --> F[AppointmentForm]
-    C --> G[AppointmentList]
-    D --> H[CustomerForm]
-    D --> I[CustomerList]
-    E --> J[TechnicianForm]
-    E --> K[TechnicianList]
-``` 
+## License
+This project is licensed under the MIT License. 
