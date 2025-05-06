@@ -17,10 +17,15 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Automated server startup with cursorrules trigger
 - Billing system with automatic bill creation for appointments
 - Support for both bills and estimates
-- Bill status tracking (draft, sent, paid, cancelled)
+- Bill status tracking (draft, sent, paid, overdue, cancelled)
 - New Billing page with customer management integration
 - Support for walk-in/cash customers
 - Separate date and time inputs for appointments
+- Line items for bills and estimates
+- Automatic bill creation when appointments are made
+- Total amount calculation based on line items
+- Due date tracking for bills
+- Optional appointment linking for bills
 
 ### Fixed
 - Added missing React frontend files (index.html, manifest.json, index.js, reportWebVitals.js)
@@ -35,6 +40,9 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Fixed Django server configuration to allow all hosts in development
 - Resolved frontend-backend connection issues
 - Fixed date/time input format issues in appointment form
+- Fixed date/time format issues in appointment creation
+- Resolved POST issues with bills and appointments
+- Fixed authentication issues in API endpoints
 
 ### Changed
 - Updated documentation with Mermaid diagrams and code examples
@@ -47,6 +55,9 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Modified REST Framework permissions for development environment
 - Updated cursorrules to support automated server startup
 - Improved appointment form with separate date and time inputs
+- Updated appointment form to handle date and time inputs correctly
+- Improved error handling in API endpoints
+- Enhanced UI/UX for better user experience
 
 ## [0.1.0] - 2025-05-01
 

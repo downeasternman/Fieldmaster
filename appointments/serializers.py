@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Customer, Technician, Appointment, AppointmentPhoto, Bill
+from .models import Customer, Technician, Appointment, AppointmentPhoto, Bill, BillLineItem
 from datetime import datetime
 
 class UserSerializer(serializers.ModelSerializer):
@@ -101,13 +101,23 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
         return super().to_internal_value(data)
 
+class BillLineItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BillLineItem
+        fields = '__all__'
+        read_only_fields = ('amount', 'created_at', 'updated_at')
+
 class BillSerializer(serializers.ModelSerializer):
     customer = CustomerSerializer(read_only=True)
     appointment = AppointmentSerializer(read_only=True)
+    line_items = BillLineItemSerializer(many=True, read_only=True)
+    total_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     customer_id = serializers.PrimaryKeyRelatedField(
         queryset=Customer.objects.all(),
         source='customer',
-        write_only=True
+        write_only=True,
+        required=False,
+        allow_null=True
     )
     appointment_id = serializers.PrimaryKeyRelatedField(
         queryset=Appointment.objects.all(),
@@ -129,4 +139,31 @@ class BillSerializer(serializers.ModelSerializer):
                 data['due_date'] = date_obj.date()
             except (ValueError, TypeError):
                 pass
-        return super().to_internal_value(data) 
+        return super().to_internal_value(data)
+
+    def create(self, validated_data):
+        line_items_data = self.context.get('line_items', [])
+        bill = Bill.objects.create(**validated_data)
+        
+        for item_data in line_items_data:
+            BillLineItem.objects.create(bill=bill, **item_data)
+        
+        return bill
+
+    def update(self, instance, validated_data):
+        line_items_data = self.context.get('line_items', [])
+        
+        # Update bill fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        # Update line items
+        if line_items_data:
+            # Remove existing line items
+            instance.line_items.all().delete()
+            # Create new line items
+            for item_data in line_items_data:
+                BillLineItem.objects.create(bill=instance, **item_data)
+        
+        return instance 

@@ -5,7 +5,8 @@ from .views import (
     TechnicianViewSet,
     AppointmentViewSet,
     AppointmentPhotoViewSet,
-    BillViewSet
+    BillViewSet,
+    BillLineItemViewSet
 )
 
 router = DefaultRouter()
@@ -14,6 +15,7 @@ router.register(r'technicians', TechnicianViewSet)
 router.register(r'appointments', AppointmentViewSet)
 router.register(r'photos', AppointmentPhotoViewSet)
 router.register(r'bills', BillViewSet)
+router.register(r'bill-line-items', BillLineItemViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

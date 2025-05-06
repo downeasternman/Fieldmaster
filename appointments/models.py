@@ -96,7 +96,6 @@ class Bill(models.Model):
     appointment = models.ForeignKey(Appointment, on_delete=models.SET_NULL, null=True, blank=True)
     type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
-    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     description = models.TextField()
     notes = models.TextField(blank=True)
     due_date = models.DateField(null=True, blank=True)
@@ -105,3 +104,25 @@ class Bill(models.Model):
 
     def __str__(self):
         return f"{self.type.title()} for {self.customer} - {self.created_at.strftime('%Y-%m-%d')}"
+
+    @property
+    def total_amount(self):
+        return sum(item.amount for item in self.line_items.all())
+
+class BillLineItem(models.Model):
+    bill = models.ForeignKey(Bill, on_delete=models.CASCADE, related_name='line_items')
+    description = models.CharField(max_length=255)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.description} - ${self.amount}"
+
+    def save(self, *args, **kwargs):
+        # Calculate amount based on quantity and unit price
+        self.amount = self.quantity * self.unit_price
+        super().save(*args, **kwargs)
