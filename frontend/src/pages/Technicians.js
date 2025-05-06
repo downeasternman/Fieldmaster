@@ -11,7 +11,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  MenuItem,
   IconButton,
   Box,
 } from '@mui/material';
@@ -122,20 +121,6 @@ const Technicians = () => {
           Add Technician
         </Button>
       </Box>
-
-      <Typography variant="h4" gutterBottom>
-        Technicians
-      </Typography>
-      <Button
-        variant="contained"
-        color="primary"
-        startIcon={<AddIcon />}
-        onClick={() => handleOpen()}
-        sx={{ mb: 2 }}
-      >
-        Add Technician
-      </Button>
-
       <Grid container spacing={3}>
         {technicians.map((technician) => (
           <Grid item xs={12} sm={6} md={4} key={technician.id}>
