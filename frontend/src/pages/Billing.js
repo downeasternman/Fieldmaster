@@ -20,14 +20,16 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Box,
 } from '@mui/material';
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
+import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon, PersonAdd as PersonAddIcon } from '@mui/icons-material';
 
 const Billing = () => {
   const [bills, setBills] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openCustomerDialog, setOpenCustomerDialog] = useState(false);
   const [editingBill, setEditingBill] = useState(null);
   const [formData, setFormData] = useState({
     customer_id: '',
@@ -37,6 +39,7 @@ const Billing = () => {
     description: '',
     notes: '',
     due_date: '',
+    employee_name: '',
     line_items: [{ description: '', quantity: 1, unit_price: 0, notes: '' }],
   });
 
@@ -100,6 +103,7 @@ const Billing = () => {
         description: bill.description,
         notes: bill.notes,
         due_date: bill.due_date,
+        employee_name: bill.employee_name,
         line_items: bill.line_items.map(item => ({
           description: item.description,
           quantity: item.quantity,
@@ -117,6 +121,7 @@ const Billing = () => {
         description: '',
         notes: '',
         due_date: '',
+        employee_name: '',
         line_items: [{ description: '', quantity: 1, unit_price: 0, notes: '' }],
       });
     }
@@ -209,6 +214,38 @@ const Billing = () => {
     }
   };
 
+  const handleOpenCustomerDialog = () => {
+    setOpenCustomerDialog(true);
+  };
+
+  const handleCloseCustomerDialog = () => {
+    setOpenCustomerDialog(false);
+  };
+
+  const handleCreateCustomer = async (customerData) => {
+    try {
+      const response = await fetch('http://localhost:8000/api/customers/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(customerData),
+      });
+
+      if (response.ok) {
+        const newCustomer = await response.json();
+        setCustomers([...customers, newCustomer]);
+        setFormData(prev => ({
+          ...prev,
+          customer_id: newCustomer.id
+        }));
+        handleCloseCustomerDialog();
+      }
+    } catch (error) {
+      console.error('Error creating customer:', error);
+    }
+  };
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Grid container spacing={3}>
@@ -237,11 +274,21 @@ const Billing = () => {
                       {bill.type === 'bill' ? 'Bill' : 'Estimate'} #{bill.id}
                     </Typography>
                     <Typography color="textSecondary">
-                      Customer: {bill.customer.name}
+                      Customer: {bill.customer ? `${bill.customer.first_name} ${bill.customer.last_name}` : 'Cash/Walk-in'}
                     </Typography>
+                    {bill.employee_name && (
+                      <Typography color="textSecondary">
+                        Employee: {bill.employee_name}
+                      </Typography>
+                    )}
                     {bill.appointment && (
                       <Typography color="textSecondary">
                         Appointment: #{bill.appointment.id}
+                      </Typography>
+                    )}
+                    {bill.notes && (
+                      <Typography color="textSecondary" sx={{ mt: 1 }}>
+                        Notes: {bill.notes}
                       </Typography>
                     )}
                   </Grid>
@@ -340,21 +387,30 @@ const Billing = () => {
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField
-                select
-                fullWidth
-                label="Customer"
-                name="customer_id"
-                value={formData.customer_id}
-                onChange={handleInputChange}
-                required
-              >
-                {customers.map((customer) => (
-                  <MenuItem key={customer.id} value={customer.id}>
-                    {customer.name}
-                  </MenuItem>
-                ))}
-              </TextField>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Customer"
+                  name="customer_id"
+                  value={formData.customer_id}
+                  onChange={handleInputChange}
+                >
+                  <MenuItem value="">Cash/Walk-in</MenuItem>
+                  {customers.map((customer) => (
+                    <MenuItem key={customer.id} value={customer.id}>
+                      {customer.first_name} {customer.last_name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <IconButton 
+                  color="primary" 
+                  onClick={handleOpenCustomerDialog}
+                  sx={{ mt: 1 }}
+                >
+                  <PersonAddIcon />
+                </IconButton>
+              </Box>
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
@@ -404,6 +460,15 @@ const Billing = () => {
                 value={formData.due_date}
                 onChange={handleInputChange}
                 InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Employee Name"
+                name="employee_name"
+                value={formData.employee_name}
+                onChange={handleInputChange}
               />
             </Grid>
             <Grid item xs={12}>
@@ -475,6 +540,63 @@ const Billing = () => {
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button onClick={handleSubmit} variant="contained" color="primary">
             {editingBill ? 'Update' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openCustomerDialog} onClose={handleCloseCustomerDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>Create New Customer</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="First Name"
+                name="first_name"
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Last Name"
+                name="last_name"
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Email"
+                name="email"
+                type="email"
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Phone"
+                name="phone"
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Address"
+                name="address"
+                multiline
+                rows={2}
+                required
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCustomerDialog}>Cancel</Button>
+          <Button onClick={handleCreateCustomer} variant="contained" color="primary">
+            Create
           </Button>
         </DialogActions>
       </Dialog>

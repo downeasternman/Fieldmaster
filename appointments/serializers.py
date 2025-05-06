@@ -109,28 +109,30 @@ class BillLineItemSerializer(serializers.ModelSerializer):
 
 class BillSerializer(serializers.ModelSerializer):
     customer = CustomerSerializer(read_only=True)
-    appointment = AppointmentSerializer(read_only=True)
-    line_items = BillLineItemSerializer(many=True, read_only=True)
-    total_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     customer_id = serializers.PrimaryKeyRelatedField(
         queryset=Customer.objects.all(),
         source='customer',
-        write_only=True,
         required=False,
         allow_null=True
     )
+    appointment = AppointmentSerializer(read_only=True)
     appointment_id = serializers.PrimaryKeyRelatedField(
         queryset=Appointment.objects.all(),
         source='appointment',
-        write_only=True,
         required=False,
         allow_null=True
     )
+    line_items = BillLineItemSerializer(many=True, read_only=True)
+    total_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
 
     class Meta:
         model = Bill
-        fields = '__all__'
-        read_only_fields = ('created_at', 'updated_at')
+        fields = [
+            'id', 'customer', 'customer_id', 'appointment', 'appointment_id',
+            'type', 'status', 'description', 'notes', 'due_date',
+            'employee_name', 'line_items', 'total_amount',
+            'created_at', 'updated_at'
+        ]
 
     def to_internal_value(self, data):
         if 'due_date' in data:

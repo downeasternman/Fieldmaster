@@ -80,30 +80,29 @@ class AppointmentPhoto(models.Model):
         return f"Photo for {self.appointment}"
 
 class Bill(models.Model):
-    TYPE_CHOICES = [
-        ('bill', 'Bill'),
-        ('estimate', 'Estimate'),
-    ]
-
-    STATUS_CHOICES = [
-        ('draft', 'Draft'),
-        ('sent', 'Sent'),
-        ('paid', 'Paid'),
-        ('cancelled', 'Cancelled'),
-    ]
-
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
     appointment = models.ForeignKey(Appointment, on_delete=models.SET_NULL, null=True, blank=True)
-    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
-    description = models.TextField()
+    type = models.CharField(max_length=20, choices=[('bill', 'Bill'), ('estimate', 'Estimate')])
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('draft', 'Draft'),
+            ('sent', 'Sent'),
+            ('paid', 'Paid'),
+            ('overdue', 'Overdue'),
+            ('cancelled', 'Cancelled'),
+        ],
+        default='draft'
+    )
+    description = models.TextField(blank=True)
     notes = models.TextField(blank=True)
     due_date = models.DateField(null=True, blank=True)
+    employee_name = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.type.title()} for {self.customer} - {self.created_at.strftime('%Y-%m-%d')}"
+        return f"{self.type.title()} #{self.id}"
 
     @property
     def total_amount(self):
