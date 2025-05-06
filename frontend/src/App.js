@@ -7,10 +7,12 @@ import Dashboard from './pages/Dashboard';
 import Appointments from './pages/Appointments';
 import Customers from './pages/Customers';
 import Technicians from './pages/Technicians';
+import Billing from './pages/Billing';
 import Login from './pages/Login';
 
 const theme = createTheme({
   palette: {
+    mode: 'light',
     primary: {
       main: '#1976d2',
     },
@@ -32,6 +34,7 @@ function App() {
             <Route path="appointments" element={<Appointments />} />
             <Route path="customers" element={<Customers />} />
             <Route path="technicians" element={<Technicians />} />
+            <Route path="billing" element={<Billing />} />
           </Route>
         </Routes>
       </Router>

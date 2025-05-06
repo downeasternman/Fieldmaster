@@ -1,5 +1,5 @@
-import React from 'react';
-import { Outlet, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
   Box,
@@ -12,19 +12,24 @@ import {
   ListItemText,
   Toolbar,
   Typography,
+  useTheme,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
-  CalendarToday as CalendarIcon,
+  Event as EventIcon,
   People as PeopleIcon,
-  Build as BuildIcon,
+  Person as PersonIcon,
+  Receipt as ReceiptIcon,
 } from '@mui/icons-material';
 
 const drawerWidth = 240;
 
-function Layout() {
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+const Layout = () => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const theme = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -32,9 +37,10 @@ function Layout() {
 
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-    { text: 'Appointments', icon: <CalendarIcon />, path: '/appointments' },
+    { text: 'Appointments', icon: <EventIcon />, path: '/appointments' },
     { text: 'Customers', icon: <PeopleIcon />, path: '/customers' },
-    { text: 'Technicians', icon: <BuildIcon />, path: '/technicians' },
+    { text: 'Technicians', icon: <PersonIcon />, path: '/technicians' },
+    { text: 'Billing', icon: <ReceiptIcon />, path: '/billing' },
   ];
 
   const drawer = (
@@ -45,9 +51,11 @@ function Layout() {
           <ListItem
             button
             key={item.text}
-            component={Link}
-            to={item.path}
-            onClick={handleDrawerToggle}
+            onClick={() => {
+              navigate(item.path);
+              setMobileOpen(false);
+            }}
+            selected={location.pathname === item.path}
           >
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />
@@ -130,6 +138,6 @@ function Layout() {
       </Box>
     </Box>
   );
-}
+};
 
 export default Layout; 

@@ -18,6 +18,8 @@ import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/ico
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { format } from 'date-fns';
 
 const statusOptions = [
   { value: 'scheduled', label: 'Scheduled' },
@@ -173,6 +175,14 @@ function Appointments() {
     }
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
@@ -262,33 +272,50 @@ function Appointments() {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DateTimePicker
+                  <DatePicker
                     label="Appointment Date"
-                    value={formData.appointment_date}
-                    onChange={(date) => setFormData({ ...formData, appointment_date: date })}
+                    value={formData.appointment_date ? new Date(formData.appointment_date) : null}
+                    onChange={(newValue) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        appointment_date: newValue ? format(newValue, 'yyyy-MM-dd') : ''
+                      }));
+                    }}
                     renderInput={(params) => <TextField {...params} fullWidth />}
                   />
                 </LocalizationProvider>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DateTimePicker
-                    label="Start Time"
-                    value={formData.start_time}
-                    onChange={(date) => setFormData({ ...formData, start_time: date })}
-                    renderInput={(params) => <TextField {...params} fullWidth />}
-                  />
-                </LocalizationProvider>
+                <TextField
+                  fullWidth
+                  label="Start Time"
+                  type="time"
+                  name="start_time"
+                  value={formData.start_time}
+                  onChange={handleInputChange}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  inputProps={{
+                    step: 300 // 5 min
+                  }}
+                />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DateTimePicker
-                    label="End Time"
-                    value={formData.end_time}
-                    onChange={(date) => setFormData({ ...formData, end_time: date })}
-                    renderInput={(params) => <TextField {...params} fullWidth />}
-                  />
-                </LocalizationProvider>
+                <TextField
+                  fullWidth
+                  label="End Time"
+                  type="time"
+                  name="end_time"
+                  value={formData.end_time}
+                  onChange={handleInputChange}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  inputProps={{
+                    step: 300 // 5 min
+                  }}
+                />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
