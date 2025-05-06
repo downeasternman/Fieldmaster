@@ -43,6 +43,10 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Fixed date/time format issues in appointment creation
 - Resolved POST issues with bills and appointments
 - Fixed authentication issues in API endpoints
+- Fixed date/time handling in appointment creation
+  - Resolved `formData.start_time.toTimeString is not a function` error
+  - Implemented proper date/time formatting using date-fns
+  - Fixed invalid date format warnings in time inputs
 
 ### Changed
 - Updated documentation with Mermaid diagrams and code examples

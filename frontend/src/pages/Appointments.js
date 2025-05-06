@@ -133,9 +133,9 @@ function Appointments() {
       // Format dates and times correctly
       const formattedData = {
         ...formData,
-        appointment_date: formData.appointment_date.toISOString().split('T')[0],
-        start_time: formData.start_time.toTimeString().split(' ')[0],
-        end_time: formData.end_time.toTimeString().split(' ')[0],
+        appointment_date: format(formData.appointment_date, 'yyyy-MM-dd'),
+        start_time: format(formData.start_time, 'HH:mm:ss'),
+        end_time: format(formData.end_time, 'HH:mm:ss'),
         customer_id: formData.customer,
         technician_id: formData.technician || null
       };
