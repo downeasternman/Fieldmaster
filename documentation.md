@@ -216,7 +216,7 @@ This project is licensed under the MIT License.
 - `unit_price` (DecimalField) - Price per unit or hourly rate
 - `notes` (TextField) - Item-specific notes
 - `part_number` (CharField) - For tracking parts (regular items)
-- `employee_number` (CharField) - For tracking technicians (labor items)
+- `employee_number` (now labeled as Employee ID in the UI) - For tracking technicians (labor items)
 - `is_labor` (BooleanField) - Distinguishes between regular items and labor
 - `is_taxable` (BooleanField) - Whether item is subject to tax
 - `technician` (ForeignKey to Technician, optional) - For labor items

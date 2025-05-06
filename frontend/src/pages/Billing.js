@@ -22,13 +22,14 @@ import {
   Paper,
   Box,
 } from '@mui/material';
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon, PersonAdd as PersonAddIcon } from '@mui/icons-material';
+import { Add as AddIcon, Delete as DeleteIcon, PersonAdd as PersonAddIcon } from '@mui/icons-material';
 import { format, parseISO } from 'date-fns';
 
 const Billing = () => {
   const [bills, setBills] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [appointments, setAppointments] = useState([]);
+  const [technicians, setTechnicians] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [openCustomerDialog, setOpenCustomerDialog] = useState(false);
   const [editingBill, setEditingBill] = useState(null);
@@ -42,6 +43,9 @@ const Billing = () => {
     due_date: '',
     employee_name: '',
     line_items: [{ description: '', quantity: 1, unit_price: 0, notes: '' }],
+  });
+  const [settings, setSettings] = useState({
+    sales_tax_rate: 0.0825
   });
 
   const billTypes = [
@@ -61,6 +65,8 @@ const Billing = () => {
     fetchBills();
     fetchCustomers();
     fetchAppointments();
+    fetchSettings();
+    fetchTechnicians();
   }, []);
 
   const fetchBills = async () => {
@@ -93,11 +99,31 @@ const Billing = () => {
     }
   };
 
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/settings/');
+      const data = await response.json();
+      setSettings(data);
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    }
+  };
+
+  const fetchTechnicians = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/technicians/');
+      const data = await response.json();
+      setTechnicians(data);
+    } catch (error) {
+      console.error('Error fetching technicians:', error);
+    }
+  };
+
   const handleOpenDialog = (bill = null) => {
     if (bill) {
       setEditingBill(bill);
       setFormData({
-        customer_id: bill.customer.id,
+        customer_id: bill.customer?.id || '',
         appointment_id: bill.appointment?.id || '',
         type: bill.type,
         status: bill.status,
@@ -110,6 +136,11 @@ const Billing = () => {
           quantity: item.quantity,
           unit_price: item.unit_price,
           notes: item.notes,
+          part_number: item.part_number || '',
+          employee_number: item.employee_number || '',
+          is_labor: item.is_labor || false,
+          is_taxable: item.is_taxable ?? true,
+          technician_id: item.technician?.id || null
         })),
       });
     } else {
@@ -123,7 +154,17 @@ const Billing = () => {
         notes: '',
         due_date: '',
         employee_name: '',
-        line_items: [{ description: '', quantity: 1, unit_price: 0, notes: '' }],
+        line_items: [{
+          description: '',
+          quantity: 1,
+          unit_price: 0,
+          notes: '',
+          part_number: '',
+          employee_number: '',
+          is_labor: false,
+          is_taxable: true,
+          technician_id: null
+        }],
       });
     }
     setOpenDialog(true);
@@ -148,16 +189,41 @@ const Billing = () => {
       ...newLineItems[index],
       [field]: value,
     };
+    
+    // If it's a labor item, ensure it's not taxable
+    if (field === 'is_labor' && value) {
+      newLineItems[index].is_taxable = false;
+    }
+    
+    // If changing technician, update the employee number and rate
+    if (field === 'technician_id' && value) {
+      const technician = technicians.find(t => t.id === parseInt(value));
+      if (technician) {
+        newLineItems[index].employee_number = technician.user?.username || '';
+        newLineItems[index].unit_price = technician.labor_rate || 0;
+      }
+    }
+    
     setFormData(prev => ({
       ...prev,
       line_items: newLineItems,
     }));
   };
 
-  const addLineItem = () => {
+  const addLineItem = (isLabor = false) => {
     setFormData(prev => ({
       ...prev,
-      line_items: [...prev.line_items, { description: '', quantity: 1, unit_price: 0, notes: '' }],
+      line_items: [...prev.line_items, {
+        description: isLabor ? 'Labor' : '',
+        quantity: 1,
+        unit_price: 0,
+        notes: '',
+        part_number: '',
+        employee_number: '',
+        is_labor: isLabor,
+        is_taxable: !isLabor, // Labor is not taxable, everything else is
+        technician_id: null
+      }],
     }));
   };
 
@@ -177,9 +243,18 @@ const Billing = () => {
       
       const method = editingBill ? 'PUT' : 'POST';
       
+      // Format the data before sending
       const formattedData = {
         ...formData,
         due_date: formData.due_date ? format(parseISO(formData.due_date), 'yyyy-MM-dd') : null,
+        line_items: formData.line_items.map(item => ({
+          ...item,
+          quantity: parseFloat(item.quantity) || 0,
+          unit_price: parseFloat(item.unit_price) || 0,
+          technician_id: item.technician_id ? parseInt(item.technician_id) : null,
+          employee_number: item.is_labor ? item.employee_number : null,
+          part_number: !item.is_labor ? item.part_number : null
+        }))
       };
       
       const response = await fetch(url, {
@@ -252,6 +327,52 @@ const Billing = () => {
     }
   };
 
+  const handleAppointmentChange = (e) => {
+    const appointmentId = e.target.value;
+    if (appointmentId) {
+      const selectedAppointment = appointments.find(a => a.id === parseInt(appointmentId));
+      if (selectedAppointment) {
+        setFormData(prev => ({
+          ...prev,
+          appointment_id: appointmentId,
+          customer_id: selectedAppointment.customer.id,
+          description: selectedAppointment.description,
+          notes: selectedAppointment.notes
+        }));
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        appointment_id: '',
+        description: '',
+        notes: ''
+      }));
+    }
+  };
+
+  const calculateTotals = (lineItems) => {
+    const subtotal = lineItems.reduce((sum, item) => {
+      const amount = item.quantity * item.unit_price;
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
+    
+    const taxableAmount = lineItems
+      .filter(item => item.is_taxable)
+      .reduce((sum, item) => {
+        const amount = item.quantity * item.unit_price;
+        return sum + (isNaN(amount) ? 0 : amount);
+      }, 0);
+    
+    const taxAmount = taxableAmount * (settings?.sales_tax_rate || 0);
+    const total = subtotal + taxAmount;
+
+    return {
+      subtotal: isNaN(subtotal) ? 0 : subtotal,
+      taxAmount: isNaN(taxAmount) ? 0 : taxAmount,
+      total: isNaN(total) ? 0 : total
+    };
+  };
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Grid container spacing={3}>
@@ -270,88 +391,140 @@ const Billing = () => {
           </Button>
         </Grid>
 
-        {bills.map((bill) => (
-          <Grid item xs={12} key={bill.id}>
-            <Card>
-              <CardContent>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="h6">
-                      {bill.type === 'bill' ? 'Bill' : 'Estimate'} #{bill.id}
-                    </Typography>
-                    <Typography color="textSecondary">
-                      Customer: {bill.customer ? `${bill.customer.first_name} ${bill.customer.last_name}` : 'Cash/Walk-in'}
-                    </Typography>
-                    {bill.employee_name && (
+        {bills.map((bill) => {
+          const totals = calculateTotals(bill.line_items);
+          return (
+            <Grid item xs={12} key={bill.id}>
+              <Card 
+                sx={{ 
+                  cursor: 'pointer',
+                  '&:hover': {
+                    boxShadow: 6,
+                    backgroundColor: 'rgba(0, 0, 0, 0.02)'
+                  }
+                }}
+                onClick={() => handleOpenDialog(bill)}
+              >
+                <CardContent>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="h6">
+                        {bill.type === 'bill' ? 'Bill' : 'Estimate'} #{bill.id}
+                      </Typography>
                       <Typography color="textSecondary">
-                        Employee: {bill.employee_name}
+                        Customer: {bill.customer ? `${bill.customer.first_name} ${bill.customer.last_name}` : 'Cash/Walk-in'}
                       </Typography>
-                    )}
-                    {bill.appointment && (
+                      {bill.employee_name && (
+                        <Typography color="textSecondary">
+                          Employee: {bill.employee_name}
+                        </Typography>
+                      )}
+                      {bill.appointment && (
+                        <Typography color="textSecondary">
+                          Appointment: #{bill.appointment.id} [{bill.appointment.description}]
+                        </Typography>
+                      )}
+                      {bill.description && (
+                        <Typography color="textSecondary" sx={{ mt: 1 }}>
+                          Description: {bill.description}
+                        </Typography>
+                      )}
+                      {bill.notes && (
+                        <Typography color="textSecondary" sx={{ mt: 1 }}>
+                          Notes: {bill.notes}
+                        </Typography>
+                      )}
+                    </Grid>
+                    <Grid item xs={12} sm={6} sx={{ textAlign: 'right' }}>
+                      <Typography variant="h6">
+                        Total: ${totals.total.toFixed(2)}
+                      </Typography>
                       <Typography color="textSecondary">
-                        Appointment: #{bill.appointment.id}
+                        Status: {bill.status}
                       </Typography>
-                    )}
-                    {bill.notes && (
-                      <Typography color="textSecondary" sx={{ mt: 1 }}>
-                        Notes: {bill.notes}
+                      <Typography color="textSecondary">
+                        Due Date: {bill.due_date ? new Date(bill.due_date).toLocaleDateString() : 'Not set'}
                       </Typography>
-                    )}
-                  </Grid>
-                  <Grid item xs={12} sm={6} sx={{ textAlign: 'right' }}>
-                    <Typography variant="h6">
-                      Total: ${bill.total_amount}
-                    </Typography>
-                    <Typography color="textSecondary">
-                      Status: {bill.status}
-                    </Typography>
-                    <Typography color="textSecondary">
-                      Due Date: {new Date(bill.due_date).toLocaleDateString()}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TableContainer component={Paper}>
-                      <Table>
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>Description</TableCell>
-                            <TableCell align="right">Quantity</TableCell>
-                            <TableCell align="right">Unit Price</TableCell>
-                            <TableCell align="right">Amount</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {bill.line_items.map((item) => (
-                            <TableRow key={item.id}>
-                              <TableCell>{item.description}</TableCell>
-                              <TableCell align="right">{item.quantity}</TableCell>
-                              <TableCell align="right">${item.unit_price}</TableCell>
-                              <TableCell align="right">${item.amount}</TableCell>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TableContainer component={Paper}>
+                        <Table>
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Description</TableCell>
+                              <TableCell>Employee ID</TableCell>
+                              <TableCell align="right">Quantity/Hours</TableCell>
+                              <TableCell align="right">Unit Price</TableCell>
+                              <TableCell align="right">Amount</TableCell>
+                              <TableCell align="center">Taxable</TableCell>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
+                          </TableHead>
+                          <TableBody>
+                            {bill.line_items.map((item) => (
+                              <TableRow key={item.id}>
+                                <TableCell>
+                                  {item.description}
+                                  {item.is_labor && item.technician?.user && (
+                                    <Typography variant="caption" display="block" color="textSecondary">
+                                      Tech: {item.technician.user.first_name} {item.technician.user.last_name}
+                                    </Typography>
+                                  )}
+                                </TableCell>
+                                <TableCell>{item.is_labor ? item.employee_number : item.part_number}</TableCell>
+                                <TableCell align="right">{item.quantity}</TableCell>
+                                <TableCell align="right">${item.unit_price}</TableCell>
+                                <TableCell align="right">${(item.quantity * item.unit_price).toFixed(2)}</TableCell>
+                                <TableCell align="center">{item.is_taxable ? 'Yes' : 'No'}</TableCell>
+                              </TableRow>
+                            ))}
+                            <TableRow>
+                              <TableCell colSpan={4} align="right">
+                                <strong>Subtotal:</strong>
+                              </TableCell>
+                              <TableCell align="right">
+                                <strong>${totals.subtotal.toFixed(2)}</strong>
+                              </TableCell>
+                              <TableCell />
+                            </TableRow>
+                            <TableRow>
+                              <TableCell colSpan={4} align="right">
+                                <strong>Tax ({settings.sales_tax_rate * 100}%):</strong>
+                              </TableCell>
+                              <TableCell align="right">
+                                <strong>${totals.taxAmount.toFixed(2)}</strong>
+                              </TableCell>
+                              <TableCell />
+                            </TableRow>
+                            <TableRow>
+                              <TableCell colSpan={4} align="right">
+                                <strong>Total:</strong>
+                              </TableCell>
+                              <TableCell align="right">
+                                <strong>${totals.total.toFixed(2)}</strong>
+                              </TableCell>
+                              <TableCell />
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Grid>
+                    <Grid item xs={12} sx={{ textAlign: 'right' }}>
+                      <IconButton
+                        color="error"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(bill.id);
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Grid>
                   </Grid>
-                  <Grid item xs={12} sx={{ textAlign: 'right' }}>
-                    <IconButton
-                      color="primary"
-                      onClick={() => handleOpenDialog(bill)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDelete(bill.id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
+                </CardContent>
+              </Card>
+            </Grid>
+          );
+        })}
       </Grid>
 
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
@@ -425,12 +598,12 @@ const Billing = () => {
                 label="Appointment (Optional)"
                 name="appointment_id"
                 value={formData.appointment_id}
-                onChange={handleInputChange}
+                onChange={handleAppointmentChange}
               >
                 <MenuItem value="">None</MenuItem>
                 {appointments.map((appointment) => (
                   <MenuItem key={appointment.id} value={appointment.id}>
-                    #{appointment.id} - {appointment.customer.name}
+                    #{appointment.id} - {appointment.description}
                   </MenuItem>
                 ))}
               </TextField>
@@ -483,7 +656,7 @@ const Billing = () => {
               </Typography>
               {formData.line_items.map((item, index) => (
                 <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
-                  <Grid item xs={12} sm={5}>
+                  <Grid item xs={12} sm={4}>
                     <TextField
                       fullWidth
                       label="Description"
@@ -493,12 +666,29 @@ const Billing = () => {
                     />
                   </Grid>
                   <Grid item xs={12} sm={2}>
+                    {item.is_labor ? (
+                      <TextField
+                        fullWidth
+                        label="Employee ID"
+                        value={item.employee_number || ''}
+                        disabled
+                      />
+                    ) : (
+                      <TextField
+                        fullWidth
+                        label="Part Number"
+                        value={item.part_number}
+                        onChange={(e) => handleLineItemChange(index, 'part_number', e.target.value)}
+                      />
+                    )}
+                  </Grid>
+                  <Grid item xs={12} sm={2}>
                     <TextField
                       fullWidth
-                      label="Quantity"
+                      label={item.is_labor ? "Hours" : "Quantity"}
                       type="number"
                       value={item.quantity}
-                      onChange={(e) => handleLineItemChange(index, 'quantity', parseFloat(e.target.value))}
+                      onChange={(e) => handleLineItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
                       required
                     />
                   </Grid>
@@ -508,7 +698,7 @@ const Billing = () => {
                       label="Unit Price"
                       type="number"
                       value={item.unit_price}
-                      onChange={(e) => handleLineItemChange(index, 'unit_price', parseFloat(e.target.value))}
+                      onChange={(e) => handleLineItemChange(index, 'unit_price', parseFloat(e.target.value) || 0)}
                       required
                     />
                   </Grid>
@@ -517,10 +707,28 @@ const Billing = () => {
                       fullWidth
                       label="Amount"
                       type="number"
-                      value={item.quantity * item.unit_price}
+                      value={(item.quantity * item.unit_price).toFixed(2)}
                       disabled
                     />
                   </Grid>
+                  {item.is_labor && (
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        select
+                        fullWidth
+                        label="Technician"
+                        value={item.technician_id || ''}
+                        onChange={(e) => handleLineItemChange(index, 'technician_id', e.target.value)}
+                      >
+                        <MenuItem value="">None</MenuItem>
+                        {technicians.map((tech) => (
+                          <MenuItem key={tech.id} value={tech.id}>
+                            {tech.user?.first_name} {tech.user?.last_name} ({tech.user?.username || 'N/A'})
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                  )}
                   <Grid item xs={12} sm={1}>
                     <IconButton
                       color="error"
@@ -534,10 +742,16 @@ const Billing = () => {
               ))}
               <Button
                 startIcon={<AddIcon />}
-                onClick={addLineItem}
-                sx={{ mt: 1 }}
+                onClick={() => addLineItem(false)}
+                sx={{ mr: 1 }}
               >
-                Add Line Item
+                Add Item
+              </Button>
+              <Button
+                startIcon={<AddIcon />}
+                onClick={() => addLineItem(true)}
+              >
+                Add Labor
               </Button>
             </Grid>
           </Grid>
