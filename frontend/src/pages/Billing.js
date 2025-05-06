@@ -23,6 +23,7 @@ import {
   Box,
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon, PersonAdd as PersonAddIcon } from '@mui/icons-material';
+import { format, parseISO } from 'date-fns';
 
 const Billing = () => {
   const [bills, setBills] = useState([]);
@@ -176,12 +177,17 @@ const Billing = () => {
       
       const method = editingBill ? 'PUT' : 'POST';
       
+      const formattedData = {
+        ...formData,
+        due_date: formData.due_date ? format(parseISO(formData.due_date), 'yyyy-MM-dd') : null,
+      };
+      
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formattedData),
       });
 
       if (response.ok) {
@@ -457,7 +463,7 @@ const Billing = () => {
                 label="Due Date"
                 name="due_date"
                 type="date"
-                value={formData.due_date}
+                value={formData.due_date ? format(parseISO(formData.due_date), 'yyyy-MM-dd') : ''}
                 onChange={handleInputChange}
                 InputLabelProps={{ shrink: true }}
               />

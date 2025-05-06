@@ -56,7 +56,7 @@ class Appointment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Appointment for {self.customer} on {self.appointment_date}"
+        return f"Appointment #{self.id} [{self.description}]"
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -67,7 +67,9 @@ class Appointment(models.Model):
                 customer=self.customer,
                 appointment=self,
                 type='bill',
-                status='draft'
+                status='draft',
+                description=self.description,
+                notes=self.notes
             )
 
 class AppointmentPhoto(models.Model):

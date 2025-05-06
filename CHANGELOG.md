@@ -29,6 +29,8 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Employee name field for bills and estimates [commit: g4h5i6j]
 - Quick customer creation from bill/estimate form [commit: k7l8m9n]
 - Notes display on bill/estimate cards [commit: o0p1q2r]
+- Appointment description and notes now carried over to bills [commit: z4a5b6c]
+- Enhanced bill display with appointment details [commit: d7e8f9g]
 
 ### Fixed
 - Added missing React frontend files (index.html, manifest.json, index.js, reportWebVitals.js) [commit: s3t4u5v]
@@ -58,6 +60,8 @@ All notable changes to the FieldMaster project will be documented in this file.
   - Added support for Cash/Walk-in customers [commit: k5l6m7n]
   - Improved customer display in bill cards [commit: o8p9q0r]
   - Added notes display on bill cards [commit: s1t2u3v]
+- Fixed date handling in billing system using parseISO [commit: h1i2j3k]
+- Fixed appointment description not being copied to bills [commit: l4m5n6o]
 
 ### Changed
 - Updated documentation with Mermaid diagrams and code examples [commit: w4x5y6z]
@@ -73,6 +77,9 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Updated appointment form to handle date and time inputs correctly [commit: k4l5m6n]
 - Improved error handling in API endpoints [commit: o7p8q9r]
 - Enhanced UI/UX for better user experience [commit: s0t1u2v]
+- Updated documentation with recent changes and improvements [commit: p7q8r9s]
+- Improved bill creation process with better appointment integration [commit: t1u2v3w]
+- Enhanced date handling in frontend components [commit: x4y5z6a]
 
 ## [0.1.0] - 2025-05-01
 
