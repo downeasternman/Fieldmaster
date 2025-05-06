@@ -91,6 +91,7 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Improved bill creation process with better appointment integration [commit: t1u2v3w]
 - Enhanced date handling in frontend components [commit: x4y5z6a]
 - Changed all references of 'Part/Employee Number' and 'Employee Number' to 'Employee ID' in the bills table and line item form for clarity.
+- Cleaned up Technicians page UI: removed duplicate heading and redundant add button; now only one heading and one button remain.
 
 ## [0.1.0] - 2025-05-01
 

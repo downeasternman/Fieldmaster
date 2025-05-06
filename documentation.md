@@ -277,4 +277,7 @@ This project is licensed under the MIT License.
 - Optional linking of bills to appointments
 - Auto-population of customer details
 - Transfer of appointment description and notes
-- Maintains relationship for reporting 
+- Maintains relationship for reporting
+
+## Technicians Page
+- The Technicians page now displays a single heading and a single 'Add Technician' button above the technician cards for a cleaner UI. 

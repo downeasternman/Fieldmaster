@@ -1,36 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
+  Container,
+  Typography,
   Button,
+  Grid,
   Card,
   CardContent,
   Dialog,
-  DialogActions,
-  DialogContent,
   DialogTitle,
-  Grid,
+  DialogContent,
+  DialogActions,
   TextField,
-  Typography,
+  MenuItem,
   IconButton,
-  Switch,
-  FormControlLabel,
+  Box,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 
-function Technicians() {
+const Technicians = () => {
   const [technicians, setTechnicians] = useState([]);
   const [open, setOpen] = useState(false);
   const [selectedTechnician, setSelectedTechnician] = useState(null);
   const [formData, setFormData] = useState({
-    user: {
-      first_name: '',
-      last_name: '',
-      email: '',
-      username: '',
-      password: '',
-    },
+    username: '',
+    password: '',
+    first_name: '',
+    last_name: '',
+    email: '',
     phone: '',
-    is_available: true,
+    labor_rate: 85.00
   });
 
   useEffect(() => {
@@ -54,15 +52,13 @@ function Technicians() {
     } else {
       setSelectedTechnician(null);
       setFormData({
-        user: {
-          first_name: '',
-          last_name: '',
-          email: '',
-          username: '',
-          password: '',
-        },
+        username: '',
+        password: '',
+        first_name: '',
+        last_name: '',
+        email: '',
         phone: '',
-        is_available: true,
+        labor_rate: 85.00
       });
     }
     setOpen(true);
@@ -114,47 +110,69 @@ function Technicians() {
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4">Technicians</Typography>
         <Button
           variant="contained"
+          color="primary"
           startIcon={<AddIcon />}
           onClick={() => handleOpen()}
         >
-          New Technician
+          Add Technician
         </Button>
       </Box>
+
+      <Typography variant="h4" gutterBottom>
+        Technicians
+      </Typography>
+      <Button
+        variant="contained"
+        color="primary"
+        startIcon={<AddIcon />}
+        onClick={() => handleOpen()}
+        sx={{ mb: 2 }}
+      >
+        Add Technician
+      </Button>
 
       <Grid container spacing={3}>
         {technicians.map((technician) => (
           <Grid item xs={12} sm={6} md={4} key={technician.id}>
-            <Card>
+            <Card 
+              sx={{ 
+                cursor: 'pointer',
+                '&:hover': {
+                  boxShadow: 6,
+                  backgroundColor: 'rgba(0, 0, 0, 0.02)'
+                }
+              }}
+              onClick={() => handleOpen(technician)}
+            >
               <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="h6">
-                    {technician.user.first_name} {technician.user.last_name}
-                  </Typography>
-                  <Box>
-                    <IconButton onClick={() => handleOpen(technician)}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handleDelete(technician.id)}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
+                <Typography variant="h6">
+                  {technician.user.first_name} {technician.user.last_name}
+                </Typography>
+                <Typography color="textSecondary">
+                  Email: {technician.user.email}
+                </Typography>
+                <Typography color="textSecondary">
+                  Phone: {technician.phone}
+                </Typography>
+                <Typography color="textSecondary">
+                  Status: {technician.is_available ? 'Available' : 'Unavailable'}
+                </Typography>
+                <Box sx={{ textAlign: 'right', mt: 2 }}>
+                  <IconButton
+                    color="error"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(technician.id);
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
                 </Box>
-                <Typography color="textSecondary">{technician.user.email}</Typography>
-                <Typography color="textSecondary">{technician.phone}</Typography>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={technician.is_available}
-                      disabled
-                    />
-                  }
-                  label="Available"
-                />
               </CardContent>
             </Card>
           </Grid>
@@ -172,11 +190,8 @@ function Technicians() {
                 <TextField
                   fullWidth
                   label="First Name"
-                  value={formData.user.first_name}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    user: { ...formData.user, first_name: e.target.value }
-                  })}
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                   required
                 />
               </Grid>
@@ -184,11 +199,8 @@ function Technicians() {
                 <TextField
                   fullWidth
                   label="Last Name"
-                  value={formData.user.last_name}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    user: { ...formData.user, last_name: e.target.value }
-                  })}
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                   required
                 />
               </Grid>
@@ -197,11 +209,8 @@ function Technicians() {
                   fullWidth
                   label="Email"
                   type="email"
-                  value={formData.user.email}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    user: { ...formData.user, email: e.target.value }
-                  })}
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
                 />
               </Grid>
@@ -209,11 +218,8 @@ function Technicians() {
                 <TextField
                   fullWidth
                   label="Username"
-                  value={formData.user.username}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    user: { ...formData.user, username: e.target.value }
-                  })}
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                   required
                 />
               </Grid>
@@ -223,11 +229,8 @@ function Technicians() {
                     fullWidth
                     label="Password"
                     type="password"
-                    value={formData.user.password}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      user: { ...formData.user, password: e.target.value }
-                    })}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     required
                   />
                 </Grid>
@@ -242,14 +245,17 @@ function Technicians() {
                 />
               </Grid>
               <Grid item xs={12}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formData.is_available}
-                      onChange={(e) => setFormData({ ...formData, is_available: e.target.checked })}
-                    />
-                  }
-                  label="Available"
+                <TextField
+                  fullWidth
+                  label="Labor Rate"
+                  type="number"
+                  value={formData.labor_rate}
+                  onChange={(e) => setFormData({ ...formData, labor_rate: parseFloat(e.target.value) })}
+                  InputProps={{
+                    startAdornment: '$',
+                    inputProps: { min: 0, step: 0.01 }
+                  }}
+                  required
                 />
               </Grid>
             </Grid>
@@ -262,8 +268,8 @@ function Technicians() {
           </DialogActions>
         </form>
       </Dialog>
-    </Box>
+    </Container>
   );
-}
+};
 
 export default Technicians; 
