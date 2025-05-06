@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Customer, Technician, Appointment, AppointmentPhoto, Bill, BillLineItem
+from .models import Customer, Technician, Appointment, AppointmentPhoto, Bill, BillLineItem, Settings, UserSettings, Photo
 from datetime import datetime
 
 class UserSerializer(serializers.ModelSerializer):
@@ -10,32 +10,71 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
 class CustomerSerializer(serializers.ModelSerializer):
+    photos = serializers.SerializerMethodField()
+    
     class Meta:
         model = Customer
         fields = '__all__'
+    
+    def get_photos(self, obj):
+        photos = Photo.objects.filter(content_type='customer', object_id=obj.id)
+        return PhotoSerializer(photos, many=True).data
 
 class TechnicianSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+    user = UserSerializer(read_only=True)
+    username = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True)
+    first_name = serializers.CharField(write_only=True)
+    last_name = serializers.CharField(write_only=True)
+    email = serializers.EmailField(write_only=True)
     
     class Meta:
         model = Technician
-        fields = '__all__'
+        fields = ['id', 'user', 'username', 'password', 'first_name', 'last_name', 'email', 'phone', 'is_available', 'labor_rate', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
     
     def create(self, validated_data):
-        user_data = validated_data.pop('user')
+        # Extract user data
+        user_data = {
+            'username': validated_data.pop('username'),
+            'password': validated_data.pop('password'),
+            'first_name': validated_data.pop('first_name'),
+            'last_name': validated_data.pop('last_name'),
+            'email': validated_data.pop('email')
+        }
+        
+        # Create user
         user = User.objects.create_user(**user_data)
+        
+        # Create technician
         technician = Technician.objects.create(user=user, **validated_data)
         return technician
+
+    def update(self, instance, validated_data):
+        # Update the technician instance
+        instance.phone = validated_data.get('phone', instance.phone)
+        instance.is_available = validated_data.get('is_available', instance.is_available)
+        instance.labor_rate = validated_data.get('labor_rate', instance.labor_rate)
+        instance.save()
+        return instance
 
 class AppointmentPhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = AppointmentPhoto
         fields = '__all__'
 
+class PhotoSerializer(serializers.ModelSerializer):
+    uploaded_by = UserSerializer(read_only=True)
+    
+    class Meta:
+        model = Photo
+        fields = ['id', 'photo', 'description', 'uploaded_at', 'uploaded_by', 'content_type', 'object_id']
+        read_only_fields = ['uploaded_at', 'uploaded_by']
+
 class AppointmentSerializer(serializers.ModelSerializer):
     customer = CustomerSerializer(read_only=True)
     technician = TechnicianSerializer(read_only=True)
-    photos = AppointmentPhotoSerializer(many=True, read_only=True)
+    photos = serializers.SerializerMethodField()
     customer_id = serializers.PrimaryKeyRelatedField(
         queryset=Customer.objects.all(),
         source='customer',
@@ -53,6 +92,10 @@ class AppointmentSerializer(serializers.ModelSerializer):
         model = Appointment
         fields = '__all__'
         read_only_fields = ('created_at', 'updated_at')
+    
+    def get_photos(self, obj):
+        photos = Photo.objects.filter(content_type='appointment', object_id=obj.id)
+        return PhotoSerializer(photos, many=True).data
 
     def create(self, validated_data):
         print("Validated data:", validated_data)  # Debug print
@@ -124,15 +167,20 @@ class BillSerializer(serializers.ModelSerializer):
     )
     line_items = BillLineItemSerializer(many=True, read_only=True)
     total_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    photos = serializers.SerializerMethodField()
 
     class Meta:
         model = Bill
         fields = [
             'id', 'customer', 'customer_id', 'appointment', 'appointment_id',
             'type', 'status', 'description', 'notes', 'due_date',
-            'employee_name', 'line_items', 'total_amount',
+            'employee_name', 'line_items', 'total_amount', 'photos',
             'created_at', 'updated_at'
         ]
+    
+    def get_photos(self, obj):
+        photos = Photo.objects.filter(content_type='bill', object_id=obj.id)
+        return PhotoSerializer(photos, many=True).data
 
     def to_internal_value(self, data):
         if 'due_date' in data:
@@ -168,4 +216,15 @@ class BillSerializer(serializers.ModelSerializer):
             for item_data in line_items_data:
                 BillLineItem.objects.create(bill=instance, **item_data)
         
-        return instance 
+        return instance
+
+class SettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Settings
+        fields = ['id', 'sales_tax_rate', 'theme', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+class UserSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserSettings
+        fields = ['theme', 'font'] 

@@ -1,6 +1,32 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
+
+class Settings(models.Model):
+    sales_tax_rate = models.DecimalField(
+        max_digits=5, 
+        decimal_places=4,
+        default=0.0825,
+        validators=[MinValueValidator(0), MaxValueValidator(1)]
+    )
+    theme = models.CharField(
+        max_length=10,
+        choices=[('light', 'Light'), ('dark', 'Dark')],
+        default='light'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Settings"
+
+    def __str__(self):
+        return f"Settings (Last updated: {self.updated_at})"
+
+    @classmethod
+    def get_settings(cls):
+        settings, created = cls.objects.get_or_create(pk=1)
+        return settings
 
 class Customer(models.Model):
     first_name = models.CharField(max_length=100)
@@ -22,6 +48,12 @@ class Technician(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone = models.CharField(max_length=15)
     is_available = models.BooleanField(default=True)
+    labor_rate = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=85.00,
+        validators=[MinValueValidator(0)]
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -71,6 +103,15 @@ class Appointment(models.Model):
                 description=self.description,
                 notes=self.notes
             )
+        else:
+            # Update existing bill if it exists
+            try:
+                bill = Bill.objects.get(appointment=self)
+                bill.description = self.description
+                bill.notes = self.notes
+                bill.save()
+            except Bill.DoesNotExist:
+                pass
 
 class AppointmentPhoto(models.Model):
     appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE, related_name='photos')
@@ -110,20 +151,82 @@ class Bill(models.Model):
     def total_amount(self):
         return sum(item.amount for item in self.line_items.all())
 
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new:
+            # Add default labor line item
+            BillLineItem.objects.create(
+                bill=self,
+                description="Labor",
+                quantity=0,
+                unit_price=0,
+                is_labor=True,
+                is_taxable=False
+            )
+
 class BillLineItem(models.Model):
     bill = models.ForeignKey(Bill, on_delete=models.CASCADE, related_name='line_items')
-    description = models.CharField(max_length=255)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    description = models.CharField(max_length=200)
+    part_number = models.CharField(max_length=50, blank=True)
+    employee_number = models.CharField(max_length=50, blank=True)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
     notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    is_labor = models.BooleanField(default=False)
+    is_taxable = models.BooleanField(default=True)
+    technician = models.ForeignKey('Technician', on_delete=models.SET_NULL, null=True, blank=True)
+
+    @property
+    def amount(self):
+        return self.quantity * self.unit_price
 
     def __str__(self):
         return f"{self.description} - ${self.amount}"
 
-    def save(self, *args, **kwargs):
-        # Calculate amount based on quantity and unit price
-        self.amount = self.quantity * self.unit_price
-        super().save(*args, **kwargs)
+FONT_CHOICES = [
+    ('Roboto', 'Roboto'),
+    ('Arial', 'Arial'),
+    ('Lato', 'Lato'),
+    ('Open Sans', 'Open Sans'),
+    ('Montserrat', 'Montserrat'),
+    ('Source Sans Pro', 'Source Sans Pro'),
+    ('Nunito', 'Nunito'),
+    ('Raleway', 'Raleway'),
+    ('Ubuntu', 'Ubuntu'),
+    ('Merriweather', 'Merriweather'),
+    ('Inter', 'Inter'),
+    ('Georgia', 'Georgia'),
+]
+
+class UserSettings(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='settings')
+    theme = models.CharField(max_length=10, choices=[('light', 'Light'), ('dark', 'Dark')], default='light')
+    font = models.CharField(max_length=32, choices=FONT_CHOICES, default='Roboto')
+
+    def __str__(self):
+        return f"Settings for {self.user.username}"
+
+class Photo(models.Model):
+    PHOTO_TYPES = [
+        ('customer', 'Customer'),
+        ('appointment', 'Appointment'),
+        ('bill', 'Bill'),
+    ]
+
+    photo = models.ImageField(upload_to='photos/')
+    description = models.CharField(max_length=255, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    
+    # Generic foreign key fields
+    content_type = models.CharField(max_length=20, choices=PHOTO_TYPES)
+    object_id = models.PositiveIntegerField()
+    
+    def __str__(self):
+        return f"{self.content_type.title()} Photo #{self.id}"
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+        ]

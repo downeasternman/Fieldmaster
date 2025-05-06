@@ -12,8 +12,9 @@ import {
   TextField,
   Typography,
   IconButton,
+  Container,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 
 function Customers() {
   const [customers, setCustomers] = useState([]);
@@ -104,39 +105,59 @@ function Customers() {
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Customers</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpen()}
-        >
-          New Customer
-        </Button>
-      </Box>
-
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Typography variant="h4" gutterBottom>
+            Customers
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpen()}
+            sx={{ mb: 2 }}
+          >
+            New Customer
+          </Button>
+        </Grid>
+
         {customers.map((customer) => (
           <Grid item xs={12} sm={6} md={4} key={customer.id}>
-            <Card>
+            <Card 
+              sx={{ 
+                cursor: 'pointer',
+                '&:hover': {
+                  boxShadow: 6,
+                  backgroundColor: 'rgba(0, 0, 0, 0.02)'
+                }
+              }}
+              onClick={() => handleOpen(customer)}
+            >
               <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="h6">
-                    {customer.first_name} {customer.last_name}
-                  </Typography>
-                  <Box>
-                    <IconButton onClick={() => handleOpen(customer)}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handleDelete(customer.id)}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
+                <Typography variant="h6">
+                  {customer.first_name} {customer.last_name}
+                </Typography>
+                <Typography color="textSecondary">
+                  Email: {customer.email}
+                </Typography>
+                <Typography color="textSecondary">
+                  Phone: {customer.phone}
+                </Typography>
+                <Typography color="textSecondary">
+                  Address: {customer.address}
+                </Typography>
+                <Box sx={{ textAlign: 'right', mt: 2 }}>
+                  <IconButton
+                    color="error"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(customer.id);
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
                 </Box>
-                <Typography color="textSecondary">{customer.email}</Typography>
-                <Typography color="textSecondary">{customer.phone}</Typography>
-                <Typography color="textSecondary">{customer.address}</Typography>
               </CardContent>
             </Card>
           </Grid>
@@ -208,7 +229,7 @@ function Customers() {
           </DialogActions>
         </form>
       </Dialog>
-    </Box>
+    </Container>
   );
 }
 

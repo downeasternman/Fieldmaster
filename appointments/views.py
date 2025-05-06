@@ -1,16 +1,23 @@
 from django.shortcuts import render
 from rest_framework import viewsets, status, permissions
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from .models import Customer, Technician, Appointment, AppointmentPhoto, Bill, BillLineItem
+from .models import Customer, Technician, Appointment, AppointmentPhoto, Bill, BillLineItem, Settings, UserSettings, Photo
 from .serializers import (
     CustomerSerializer,
     TechnicianSerializer,
     AppointmentSerializer,
     AppointmentPhotoSerializer,
     BillSerializer,
-    BillLineItemSerializer
+    BillLineItemSerializer,
+    SettingsSerializer,
+    UserSettingsSerializer,
+    UserSerializer,
+    PhotoSerializer
 )
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 
 # Create your views here.
 
@@ -126,3 +133,74 @@ class BillLineItemViewSet(viewsets.ModelViewSet):
         if bill:
             queryset = queryset.filter(bill_id=bill)
         return queryset
+
+class SettingsView(viewsets.ModelViewSet):
+    queryset = Settings.objects.all()
+    serializer_class = SettingsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class UserSettingsView(viewsets.ModelViewSet):
+    queryset = UserSettings.objects.all()
+    serializer_class = UserSettingsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return UserSettings.objects.filter(user=self.request.user)
+
+class PhotoViewSet(viewsets.ModelViewSet):
+    queryset = Photo.objects.all()
+    serializer_class = PhotoSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(uploaded_by=self.request.user)
+
+    @action(detail=False, methods=['post'])
+    def upload(self, request):
+        content_type = request.data.get('content_type')
+        object_id = request.data.get('object_id')
+        description = request.data.get('description', '')
+
+        if not content_type or not object_id:
+            return Response(
+                {'error': 'content_type and object_id are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate content type
+        valid_types = ['customer', 'appointment', 'bill']
+        if content_type not in valid_types:
+            return Response(
+                {'error': f'Invalid content_type. Must be one of: {", ".join(valid_types)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create photo
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(
+            uploaded_by=request.user,
+            content_type=content_type,
+            object_id=object_id,
+            description=description
+        )
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['get'])
+    def by_object(self, request):
+        content_type = request.query_params.get('content_type')
+        object_id = request.query_params.get('object_id')
+
+        if not content_type or not object_id:
+            return Response(
+                {'error': 'content_type and object_id are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        photos = self.queryset.filter(
+            content_type=content_type,
+            object_id=object_id
+        )
+        serializer = self.get_serializer(photos, many=True)
+        return Response(serializer.data)

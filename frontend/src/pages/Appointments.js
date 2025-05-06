@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
+  Container,
+  Typography,
   Button,
+  Grid,
   Card,
   CardContent,
   Dialog,
-  DialogActions,
-  DialogContent,
   DialogTitle,
-  Grid,
+  DialogContent,
+  DialogActions,
   TextField,
-  Typography,
   MenuItem,
   IconButton,
   Alert,
@@ -241,17 +241,8 @@ function Appointments() {
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Appointments</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpen()}
-        >
-          New Appointment
-        </Button>
-      </Box>
+    <Container>
+      <Typography variant="h4" sx={{ mb: 3 }}>Appointments</Typography>
 
       <Grid container spacing={3}>
         {appointments.map((appointment) => (
@@ -266,19 +257,9 @@ function Appointments() {
               onClick={() => handleOpen(appointment)}
             >
               <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="h6">
-                    {new Date(appointment.appointment_date).toLocaleDateString()}
-                  </Typography>
-                  <Box>
-                    <IconButton onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(appointment.id);
-                    }}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
-                </Box>
+                <Typography variant="h6">
+                  {new Date(appointment.appointment_date).toLocaleDateString()}
+                </Typography>
                 <Typography color="textSecondary">
                   {appointment.customer.first_name} {appointment.customer.last_name}
                 </Typography>
@@ -296,6 +277,15 @@ function Appointments() {
           </Grid>
         ))}
       </Grid>
+
+      <Button
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={() => handleOpen()}
+        sx={{ mt: 3, mb: 3 }}
+      >
+        New Appointment
+      </Button>
 
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogTitle>
@@ -458,7 +448,7 @@ function Appointments() {
         onClose={() => setError(null)}
         message={error}
       />
-    </Box>
+    </Container>
   );
 }
 

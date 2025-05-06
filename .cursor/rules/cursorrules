@@ -10,6 +10,10 @@
             "command": "npm start"
           },
           {
+            "directory": "backend",
+            "command": "npm run dev"
+          },
+          {
             "directory": "fieldmaster",
             "command": "python manage.py runserver"
           }
