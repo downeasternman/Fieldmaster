@@ -252,8 +252,8 @@ const Billing = () => {
           quantity: parseFloat(item.quantity) || 0,
           unit_price: parseFloat(item.unit_price) || 0,
           technician_id: item.technician_id ? parseInt(item.technician_id) : null,
-          employee_number: item.is_labor ? item.employee_number : null,
-          part_number: !item.is_labor ? item.part_number : null
+          employee_number: item.is_labor ? (item.employee_number || '') : '',
+          part_number: !item.is_labor ? (item.part_number || '') : ''
         }))
       };
       
