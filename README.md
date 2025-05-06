@@ -26,12 +26,18 @@ FieldMaster is a comprehensive field service management system designed to strea
 ### Billing System
 - Create bills and estimates
 - Add line items with quantities and prices
-- Automatic total calculation
+- Support for both regular items and labor items
+- Automatic labor rate population from technician profiles
+- Track employee numbers for labor items
+- Automatic tax handling (labor items non-taxable by default)
+- Part number tracking for regular items
+- Automatic total calculation with tax
 - Track bill status (draft, sent, paid, overdue, cancelled)
 - Link bills to appointments
 - Set due dates for bills
 - Support for both bills and estimates
 - Automatic bill creation for new appointments
+- Support for walk-in/cash customers
 
 ## Production Readiness Checklist
 

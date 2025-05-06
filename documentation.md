@@ -120,6 +120,11 @@ class BillLineItem(models.Model):
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     notes = models.TextField(blank=True)
+    part_number = models.CharField(max_length=255, blank=True)
+    employee_number = models.CharField(max_length=255, blank=True)
+    is_labor = models.BooleanField(default=False)
+    is_taxable = models.BooleanField(default=True)
+    technician = models.ForeignKey(Technician, null=True, blank=True)
 ```
 
 ## Recent Updates
@@ -186,4 +191,90 @@ class BillLineItem(models.Model):
 4. Submit a pull request
 
 ## License
-This project is licensed under the MIT License. 
+This project is licensed under the MIT License.
+
+# Technical Documentation
+
+## Billing System
+
+### Models
+
+#### Bill
+- `customer` (ForeignKey to Customer, optional) - Allows for walk-in/cash customers
+- `appointment` (ForeignKey to Appointment, optional) - Links bill to appointment
+- `type` (CharField) - Either 'bill' or 'estimate'
+- `status` (CharField) - One of: draft, sent, paid, overdue, cancelled
+- `description` (TextField) - General description of the bill
+- `notes` (TextField) - Additional notes
+- `due_date` (DateField) - When payment is due
+- `employee_name` (CharField) - Name of employee handling the bill
+
+#### BillLineItem
+- `bill` (ForeignKey to Bill) - Parent bill
+- `description` (CharField) - Item description
+- `quantity` (DecimalField) - Quantity or hours for labor items
+- `unit_price` (DecimalField) - Price per unit or hourly rate
+- `notes` (TextField) - Item-specific notes
+- `part_number` (CharField) - For tracking parts (regular items)
+- `employee_number` (CharField) - For tracking technicians (labor items)
+- `is_labor` (BooleanField) - Distinguishes between regular items and labor
+- `is_taxable` (BooleanField) - Whether item is subject to tax
+- `technician` (ForeignKey to Technician, optional) - For labor items
+
+### Frontend Components
+
+#### BillForm
+- Handles creation and editing of bills
+- Manages line items with different behavior for regular vs labor items
+- Automatically populates labor rates from technician profiles
+- Handles tax calculations (labor items non-taxable by default)
+- Supports customer selection with walk-in option
+- Optional appointment linking with auto-population of details
+
+#### BillCard
+- Displays bill information in a card format
+- Shows customer details or "Cash/Walk-in"
+- Displays appointment details if linked
+- Lists line items with appropriate headers (Quantity/Hours)
+- Shows tax calculations and totals
+- Indicates bill status and due date
+
+### API Endpoints
+
+#### /api/bills/
+- GET: List all bills
+- POST: Create new bill
+- PUT: Update existing bill
+- DELETE: Remove bill
+
+#### /api/bills/{id}/
+- GET: Retrieve specific bill
+- PUT: Update specific bill
+- DELETE: Remove specific bill
+
+### Business Logic
+
+#### Line Item Handling
+- Regular items:
+  - Track part numbers
+  - Subject to tax by default
+  - Quantity represents units
+
+- Labor items:
+  - Track employee numbers
+  - Not subject to tax
+  - Quantity represents hours
+  - Auto-populate rates from technician profiles
+
+#### Tax Calculation
+- Only applies to taxable items
+- Configurable tax rate in settings
+- Automatic handling of labor items as non-taxable
+- Subtotal calculated before tax
+- Tax amount calculated based on taxable items only
+
+#### Integration with Appointments
+- Optional linking of bills to appointments
+- Auto-population of customer details
+- Transfer of appointment description and notes
+- Maintains relationship for reporting 

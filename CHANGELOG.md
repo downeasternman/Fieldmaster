@@ -31,6 +31,11 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Notes display on bill/estimate cards [commit: o0p1q2r]
 - Appointment description and notes now carried over to bills [commit: z4a5b6c]
 - Enhanced bill display with appointment details [commit: d7e8f9g]
+- Labor item support in billing system with technician selection
+- Automatic labor rate population from technician profiles
+- Employee number tracking for labor items
+- Taxable/non-taxable item support with automatic tax handling for labor items
+- Enhanced line item management with part numbers and employee numbers
 
 ### Fixed
 - Added missing React frontend files (index.html, manifest.json, index.js, reportWebVitals.js) [commit: s3t4u5v]
@@ -62,6 +67,11 @@ All notable changes to the FieldMaster project will be documented in this file.
   - Added notes display on bill cards [commit: s1t2u3v]
 - Fixed date handling in billing system using parseISO [commit: h1i2j3k]
 - Fixed appointment description not being copied to bills [commit: l4m5n6o]
+- Fixed TypeError with employee_number field in BillLineItem model
+- Fixed undefined user access in technician selection
+- Improved labor item handling in billing forms
+- Fixed tax calculation for labor items (now non-taxable by default)
+- Fixed technician selection and rate population in labor items
 
 ### Changed
 - Updated documentation with Mermaid diagrams and code examples [commit: w4x5y6z]
