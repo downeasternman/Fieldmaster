@@ -22,6 +22,7 @@ FieldMaster is a comprehensive field service management system designed to strea
 - Track technician availability
 - Assign technicians to appointments
 - View technician performance
+- **Sidebar navigation now uses an Engineering icon for Technicians for better clarity**
 
 ### Billing System
 - Create bills and estimates

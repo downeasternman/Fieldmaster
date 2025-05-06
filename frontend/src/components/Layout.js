@@ -18,9 +18,10 @@ import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
   Event as EventIcon,
+  AttachMoney as AttachMoneyIcon,
+  Settings as SettingsIcon,
   People as PeopleIcon,
-  Person as PersonIcon,
-  Receipt as ReceiptIcon,
+  Engineering as EngineeringIcon,
 } from '@mui/icons-material';
 
 const drawerWidth = 240;
@@ -39,8 +40,9 @@ const Layout = () => {
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
     { text: 'Appointments', icon: <EventIcon />, path: '/appointments' },
     { text: 'Customers', icon: <PeopleIcon />, path: '/customers' },
-    { text: 'Technicians', icon: <PersonIcon />, path: '/technicians' },
-    { text: 'Billing', icon: <ReceiptIcon />, path: '/billing' },
+    { text: 'Technicians', icon: <EngineeringIcon />, path: '/technicians' },
+    { text: 'Billing', icon: <AttachMoneyIcon />, path: '/billing' },
+    { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
   ];
 
   const drawer = (

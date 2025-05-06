@@ -9,6 +9,11 @@
       "pattern": ".*\\.(js|jsx|py|html)$",
       "action": "update_changelog",
       "changelog_file": "CHANGELOG.md"
+    },
+    {
+      "pattern": ".*",
+      "action": "verify_git_push",
+      "description": "After every git push, check for success and summarize what was pushed."
     }
   ],
   "guidelines": {
@@ -28,6 +33,18 @@
           "Document the process in changelog"
         ]
       }
+    },
+    "assistant_behavior": {
+      "avoid_redundant_actions": true,
+      "verify_state_before_changes": true,
+      "provide_clear_summaries": true,
+      "handle_terminal_output_robustly": true,
+      "avoid_repeating_actions_unless_needed": true,
+      "acknowledge_and_address_user_feedback": true
+    },
+    "directory_operations": {
+      "check_directory_exists_before_cd": true,
+      "check_directory_exists_before_file_operations": true
     }
   }
 } 
