@@ -13,13 +13,15 @@ import {
   Typography,
   MenuItem,
   IconButton,
+  Alert,
+  Snackbar,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 const statusOptions = [
   { value: 'scheduled', label: 'Scheduled' },
@@ -41,12 +43,13 @@ function Appointments() {
   const [technicians, setTechnicians] = useState([]);
   const [open, setOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     customer: '',
     technician: '',
     appointment_date: new Date(),
-    start_time: new Date(),
-    end_time: new Date(),
+    start_time: new Date(new Date().setHours(9, 0, 0, 0)),
+    end_time: new Date(new Date().setHours(10, 0, 0, 0)),
     description: '',
     status: 'scheduled',
     priority: 'medium',
@@ -94,20 +97,43 @@ function Appointments() {
   const handleOpen = (appointment = null) => {
     if (appointment) {
       setSelectedAppointment(appointment);
-      setFormData({
-        ...appointment,
-        appointment_date: new Date(appointment.appointment_date),
-        start_time: new Date(appointment.start_time),
-        end_time: new Date(appointment.end_time),
-      });
+      try {
+        const startTime = new Date();
+        const [startHours, startMinutes] = appointment.start_time.split(':');
+        startTime.setHours(parseInt(startHours), parseInt(startMinutes), 0, 0);
+
+        const endTime = new Date();
+        const [endHours, endMinutes] = appointment.end_time.split(':');
+        endTime.setHours(parseInt(endHours), parseInt(endMinutes), 0, 0);
+
+        setFormData({
+          ...appointment,
+          customer: appointment.customer.id,
+          technician: appointment.technician?.id || '',
+          appointment_date: new Date(appointment.appointment_date),
+          start_time: startTime,
+          end_time: endTime,
+        });
+      } catch (error) {
+        console.warn('Error parsing appointment times:', error);
+        // Set default times if parsing fails
+        setFormData({
+          ...appointment,
+          customer: appointment.customer.id,
+          technician: appointment.technician?.id || '',
+          appointment_date: new Date(appointment.appointment_date),
+          start_time: new Date(new Date().setHours(9, 0, 0, 0)),
+          end_time: new Date(new Date().setHours(10, 0, 0, 0)),
+        });
+      }
     } else {
       setSelectedAppointment(null);
       setFormData({
         customer: '',
         technician: '',
         appointment_date: new Date(),
-        start_time: new Date(),
-        end_time: new Date(),
+        start_time: new Date(new Date().setHours(9, 0, 0, 0)),
+        end_time: new Date(new Date().setHours(10, 0, 0, 0)),
         description: '',
         status: 'scheduled',
         priority: 'medium',
@@ -120,6 +146,7 @@ function Appointments() {
   const handleClose = () => {
     setOpen(false);
     setSelectedAppointment(null);
+    setError(null);
   };
 
   const handleSubmit = async (e) => {
@@ -130,15 +157,31 @@ function Appointments() {
         : 'http://localhost:8000/api/appointments/';
       const method = selectedAppointment ? 'PUT' : 'POST';
 
-      // Format dates and times correctly
-      const formattedData = {
-        ...formData,
-        appointment_date: format(formData.appointment_date, 'yyyy-MM-dd'),
-        start_time: format(formData.start_time, 'HH:mm:ss'),
-        end_time: format(formData.end_time, 'HH:mm:ss'),
-        customer_id: formData.customer,
-        technician_id: formData.technician || null
-      };
+      let formattedData;
+      try {
+        // Try to format dates and times correctly
+        formattedData = {
+          ...formData,
+          appointment_date: format(formData.appointment_date, 'yyyy-MM-dd'),
+          start_time: format(formData.start_time, 'HH:mm:ss'),
+          end_time: format(formData.end_time, 'HH:mm:ss'),
+          customer_id: formData.customer,
+          technician_id: formData.technician || null
+        };
+      } catch (formatError) {
+        console.warn('Error formatting dates:', formatError);
+        // Use default values if formatting fails
+        const defaultDate = new Date();
+        formattedData = {
+          ...formData,
+          appointment_date: format(defaultDate, 'yyyy-MM-dd'),
+          start_time: '09:00:00',
+          end_time: '10:00:00',
+          customer_id: formData.customer,
+          technician_id: formData.technician || null
+        };
+        setError('There was an issue with the date/time format. Default times (9 AM - 10 AM) were used.');
+      }
 
       const response = await fetch(url, {
         method,
@@ -153,10 +196,11 @@ function Appointments() {
         handleClose();
       } else {
         const errorData = await response.json();
-        console.error('Error saving appointment:', errorData);
+        setError(`Error saving appointment: ${errorData.detail || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error saving appointment:', error);
+      setError('Failed to save appointment. Please try again.');
     }
   };
 
@@ -177,10 +221,23 @@ function Appointments() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    if (name === 'start_time' || name === 'end_time') {
+      // Create a new date object for today
+      const date = new Date();
+      // Parse the time value (HH:mm format)
+      const [hours, minutes] = value.split(':');
+      // Set the hours and minutes
+      date.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+      setFormData(prev => ({
+        ...prev,
+        [name]: date
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   return (
@@ -199,17 +256,25 @@ function Appointments() {
       <Grid container spacing={3}>
         {appointments.map((appointment) => (
           <Grid item xs={12} sm={6} md={4} key={appointment.id}>
-            <Card>
+            <Card 
+              sx={{ 
+                cursor: 'pointer',
+                '&:hover': {
+                  boxShadow: 6
+                }
+              }}
+              onClick={() => handleOpen(appointment)}
+            >
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="h6">
                     {new Date(appointment.appointment_date).toLocaleDateString()}
                   </Typography>
                   <Box>
-                    <IconButton onClick={() => handleOpen(appointment)}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handleDelete(appointment.id)}>
+                    <IconButton onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(appointment.id);
+                    }}>
                       <DeleteIcon />
                     </IconButton>
                   </Box>
@@ -238,6 +303,11 @@ function Appointments() {
         </DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent>
+            {error && (
+              <Alert severity="warning" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -291,7 +361,9 @@ function Appointments() {
                   label="Start Time"
                   type="time"
                   name="start_time"
-                  value={formData.start_time}
+                  value={formData.start_time instanceof Date ? 
+                    format(formData.start_time, 'HH:mm') : 
+                    formData.start_time}
                   onChange={handleInputChange}
                   InputLabelProps={{
                     shrink: true,
@@ -307,7 +379,9 @@ function Appointments() {
                   label="End Time"
                   type="time"
                   name="end_time"
-                  value={formData.end_time}
+                  value={formData.end_time instanceof Date ? 
+                    format(formData.end_time, 'HH:mm') : 
+                    formData.end_time}
                   onChange={handleInputChange}
                   InputLabelProps={{
                     shrink: true,
@@ -377,6 +451,13 @@ function Appointments() {
           </DialogActions>
         </form>
       </Dialog>
+
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        message={error}
+      />
     </Box>
   );
 }
