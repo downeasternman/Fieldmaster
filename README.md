@@ -1,89 +1,86 @@
-# FieldMaster Appointment System
+# FieldMaster
 
-A comprehensive appointment management system for plumbing and heating service companies.
+FieldMaster is a comprehensive field service management system designed to streamline appointment scheduling, customer management, and billing processes.
 
 ## Features
 
-- Customer management
-- Technician scheduling
-- Appointment booking and tracking
-- Photo uploads for service documentation
-- Priority-based scheduling
-- Status tracking
-- Admin interface
+- **Appointment Management**
+  - Schedule and track appointments
+  - Assign technicians to appointments
+  - Track appointment status and priority
+  - Upload and manage appointment photos
 
-## Setup Instructions
+- **Customer Management**
+  - Store customer information
+  - Track customer history
+  - Manage customer communications
 
-### Prerequisites
+- **Technician Management**
+  - Manage technician profiles
+  - Track technician availability
+  - Assign technicians to appointments
 
-- Python 3.8+
-- PostgreSQL
-- Node.js (for frontend)
+- **Billing System**
+  - Automatic bill creation for appointments
+  - Support for both bills and estimates
+  - Track bill status (draft, sent, paid, cancelled)
+  - Generate bills for any customer at any time
+  - Set due dates and payment tracking
 
-### Backend Setup
+## Technology Stack
 
-1. Create a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: .\venv\Scripts\activate
-```
+- **Backend**
+  - Django
+  - Django REST Framework
+  - PostgreSQL
 
+- **Frontend**
+  - React
+  - Material-UI
+  - Axios for API communication
+
+## Getting Started
+
+1. Clone the repository
 2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+   ```bash
+   # Backend
+   pip install -r requirements.txt
+   
+   # Frontend
+   cd frontend
+   npm install
+   ```
 
-3. Set up PostgreSQL database:
-```bash
-createdb fieldmaster
-```
+3. Set up the database:
+   ```bash
+   python manage.py migrate
+   ```
 
-4. Run migrations:
-```bash
-python manage.py migrate
-```
-
-5. Create a superuser:
-```bash
-python manage.py createsuperuser
-```
-
-6. Run the development server:
-```bash
-python manage.py runserver
-```
-
-### Frontend Setup (React)
-
-1. Install dependencies:
-```bash
-cd frontend
-npm install
-```
-
-2. Start the development server:
-```bash
-npm start
-```
-
-## API Endpoints
-
-- `/api/customers/` - Customer management
-- `/api/technicians/` - Technician management
-- `/api/appointments/` - Appointment management
-- `/api/photos/` - Photo uploads
-
-## Admin Interface
-
-Access the admin interface at `/admin/` with your superuser credentials.
+4. Start the development servers:
+   ```bash
+   # Backend
+   python manage.py runserver
+   
+   # Frontend
+   cd frontend
+   npm start
+   ```
 
 ## Development
 
-- Backend: Django REST Framework
-- Frontend: React
-- Database: PostgreSQL
-- Authentication: Django REST Framework Session Authentication
+- Backend API runs on http://localhost:8000
+- Frontend development server runs on http://localhost:3000
+- API documentation available at http://localhost:8000/api/
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
-MIT 
+This project is licensed under the MIT License - see the LICENSE file for details. 

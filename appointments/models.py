@@ -58,6 +58,18 @@ class Appointment(models.Model):
     def __str__(self):
         return f"Appointment for {self.customer} on {self.appointment_date}"
 
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new:
+            # Create a bill template when a new appointment is created
+            Bill.objects.create(
+                customer=self.customer,
+                appointment=self,
+                type='bill',
+                status='draft'
+            )
+
 class AppointmentPhoto(models.Model):
     appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE, related_name='photos')
     photo = models.ImageField(upload_to='appointment_photos/')
@@ -66,3 +78,30 @@ class AppointmentPhoto(models.Model):
 
     def __str__(self):
         return f"Photo for {self.appointment}"
+
+class Bill(models.Model):
+    TYPE_CHOICES = [
+        ('bill', 'Bill'),
+        ('estimate', 'Estimate'),
+    ]
+
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('sent', 'Sent'),
+        ('paid', 'Paid'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    appointment = models.ForeignKey(Appointment, on_delete=models.SET_NULL, null=True, blank=True)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    description = models.TextField()
+    notes = models.TextField(blank=True)
+    due_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.type.title()} for {self.customer} - {self.created_at.strftime('%Y-%m-%d')}"

@@ -128,17 +128,30 @@ function Appointments() {
         : 'http://localhost:8000/api/appointments/';
       const method = selectedAppointment ? 'PUT' : 'POST';
 
+      // Format dates and times correctly
+      const formattedData = {
+        ...formData,
+        appointment_date: formData.appointment_date.toISOString().split('T')[0],
+        start_time: formData.start_time.toTimeString().split(' ')[0],
+        end_time: formData.end_time.toTimeString().split(' ')[0],
+        customer_id: formData.customer,
+        technician_id: formData.technician || null
+      };
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formattedData),
       });
 
       if (response.ok) {
         fetchAppointments();
         handleClose();
+      } else {
+        const errorData = await response.json();
+        console.error('Error saving appointment:', errorData);
       }
     } catch (error) {
       console.error('Error saving appointment:', error);

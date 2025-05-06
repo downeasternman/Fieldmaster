@@ -15,6 +15,9 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Enhanced CORS settings for frontend-backend integration
 - SVG logo for better compatibility and performance
 - Automated server startup with cursorrules trigger
+- Billing system with automatic bill creation for appointments
+- Support for both bills and estimates
+- Bill status tracking (draft, sent, paid, cancelled)
 
 ### Fixed
 - Added missing React frontend files (index.html, manifest.json, index.js, reportWebVitals.js)
