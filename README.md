@@ -304,4 +304,11 @@ Monitoring helps detect issues before they impact users.
 - **Alerting:**
   - Set up alerts for critical issues (e.g., out-of-disk, high latency, failed backups).
 - **Enabling Monitoring:**
-  - Enable and configure monitoring tools in both development and production environments. 
+  - Enable and configure monitoring tools in both development and production environments.
+
+## Recent Updates
+
+- Fixed photo upload bug: uploaded images are now reliably saved and displayed only for the correct object (customer, appointment, or bill).
+- Backend now ensures uploaded files are saved to the correct model field.
+- Filtering improvements: photos are only shown for the relevant object.
+- Linting and UI/UX improvements across detail pages. 

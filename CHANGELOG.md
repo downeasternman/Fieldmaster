@@ -99,4 +99,13 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Initial project structure [commit: w3x4y5z]
 - Django backend setup [commit: a6b7c8d]
 - React frontend setup [commit: e9f0g1h]
-- Basic documentation [commit: i2j3k4l] 
+- Basic documentation [commit: i2j3k4l]
+
+## [Unreleased] - May 2025
+### Fixed
+- Uploaded photos now only appear on the correct customer, appointment, or bill detail page.
+- Backend now saves uploaded files to the correct model field.
+
+### Improved
+- Filtering logic for photos in API and serializers.
+- Linting and UI/UX consistency across detail pages. 

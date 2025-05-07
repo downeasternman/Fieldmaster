@@ -150,6 +150,13 @@ class BillLineItem(models.Model):
 - Enhanced customer display in bills
 - Added quick customer creation from billing interface
 
+## Recent Bugfixes & Improvements (May 2025)
+
+- Fixed: Uploaded photos now only appear on the correct customer, appointment, or bill detail page.
+- Fixed: Backend now saves uploaded files to the correct model field.
+- Improved: Filtering logic for photos in API and serializers.
+- Improved: Linting and UI/UX consistency across detail pages.
+
 ## Development Guidelines
 
 ### Frontend
