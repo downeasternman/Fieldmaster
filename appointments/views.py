@@ -134,12 +134,12 @@ class BillLineItemViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(bill_id=bill)
         return queryset
 
-class SettingsView(viewsets.ModelViewSet):
+class SettingsViewSet(viewsets.ModelViewSet):
     queryset = Settings.objects.all()
     serializer_class = SettingsSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class UserSettingsView(viewsets.ModelViewSet):
+class UserSettingsViewSet(viewsets.ModelViewSet):
     queryset = UserSettings.objects.all()
     serializer_class = UserSettingsSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -154,38 +154,6 @@ class PhotoViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(uploaded_by=self.request.user)
-
-    @action(detail=False, methods=['post'])
-    def upload(self, request):
-        content_type = request.data.get('content_type')
-        object_id = request.data.get('object_id')
-        description = request.data.get('description', '')
-
-        if not content_type or not object_id:
-            return Response(
-                {'error': 'content_type and object_id are required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Validate content type
-        valid_types = ['customer', 'appointment', 'bill']
-        if content_type not in valid_types:
-            return Response(
-                {'error': f'Invalid content_type. Must be one of: {", ".join(valid_types)}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Create photo
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(
-            uploaded_by=request.user,
-            content_type=content_type,
-            object_id=object_id,
-            description=description
-        )
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'])
     def by_object(self, request):
@@ -202,5 +170,57 @@ class PhotoViewSet(viewsets.ModelViewSet):
             content_type=content_type,
             object_id=object_id
         )
-        serializer = self.get_serializer(photos, many=True)
+        serializer = self.get_serializer(photos, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def upload(self, request):
+        content_type = request.data.get('content_type')
+        object_id = request.data.get('object_id')
+        description = request.data.get('description', '')
+        photo = request.FILES.get('photo')
+
+        if not content_type or not object_id:
+            return Response(
+                {'error': 'content_type and object_id are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not photo:
+            return Response(
+                {'error': 'No photo file provided'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate content type
+        valid_types = ['customer', 'appointment', 'bill']
+        if content_type not in valid_types:
+            return Response(
+                {'error': f'Invalid content_type. Must be one of: {", ".join(valid_types)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create photo
+        serializer = self.get_serializer(data={
+            'photo': photo,
+            'content_type': content_type,
+            'object_id': object_id,
+            'description': description
+        }, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save(uploaded_by=request.user)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return User.objects.filter(id=self.request.user.id)
+
+    @action(detail=False, methods=['get'])
+    def current(self, request):
+        serializer = self.get_serializer(request.user)
         return Response(serializer.data)

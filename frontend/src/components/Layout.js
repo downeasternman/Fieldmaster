@@ -13,6 +13,7 @@ import {
   Toolbar,
   Typography,
   useTheme,
+  Button,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -23,6 +24,8 @@ import {
   People as PeopleIcon,
   Engineering as EngineeringIcon,
 } from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext';
+import { useUserSettings } from '../contexts/UserSettingsContext';
 
 const drawerWidth = 240;
 
@@ -31,6 +34,8 @@ const Layout = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
+  const { userSettings } = useUserSettings();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -67,8 +72,13 @@ const Layout = () => {
     </div>
   );
 
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <CssBaseline />
       <AppBar
         position="fixed"
@@ -90,6 +100,12 @@ const Layout = () => {
           <Typography variant="h6" noWrap component="div">
             FieldMaster
           </Typography>
+          <Button color="inherit" onClick={() => navigate('/')}>Dashboard</Button>
+          <Button color="inherit" onClick={() => navigate('/customers')}>Customers</Button>
+          <Button color="inherit" onClick={() => navigate('/appointments')}>Appointments</Button>
+          <Button color="inherit" onClick={() => navigate('/billing')}>Billing</Button>
+          <Button color="inherit" onClick={() => navigate('/settings')}>Settings</Button>
+          <Button color="inherit" onClick={handleLogout}>Logout</Button>
         </Toolbar>
       </AppBar>
       <Box

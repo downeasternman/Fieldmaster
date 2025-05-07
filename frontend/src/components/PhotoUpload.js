@@ -1,78 +1,67 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Modal, Form, Image, Spinner } from 'react-bootstrap';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Box, Button, CircularProgress, Alert } from '@mui/material';
+import { PhotoCamera, Delete } from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext';
+import api from '../services/api';
 
-const PhotoUpload = ({ objectType, objectId, onPhotoAdded }) => {
-  const [show, setShow] = useState(false);
+const PhotoUpload = ({ objectType, objectId }) => {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [description, setDescription] = useState('');
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
+  const { token } = useAuth();
 
-  useEffect(() => {
-    if (show) {
-      fetchPhotos();
-    }
-  }, [show, objectId]);
-
-  const fetchPhotos = async () => {
+  const fetchPhotos = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/photos/by_object/?content_type=${objectType}&object_id=${objectId}`);
+      const response = await api.get(`/photos/?content_type=${objectType}&object_id=${objectId}`);
+      console.log('Photos response:', response.data);
       setPhotos(response.data);
+      setError(null);
     } catch (err) {
       setError('Failed to fetch photos');
       console.error('Error fetching photos:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [objectType, objectId]);
 
-  const handleFileSelect = (event) => {
+  useEffect(() => {
+    fetchPhotos();
+  }, [fetchPhotos]);
+
+  const handleFileSelect = async (event) => {
     const file = event.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        setError('File size must be less than 5MB');
-        setSelectedFile(null);
-      } else if (!file.type.startsWith('image/')) {
-        setError('File must be an image');
-        setSelectedFile(null);
-      } else {
-        setSelectedFile(file);
-        setError('');
-      }
-    }
-  };
+    if (!file) return;
 
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      setError('Please select a file to upload');
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File size must be less than 5MB');
       return;
     }
 
     try {
       setUploading(true);
       const formData = new FormData();
-      formData.append('photo', selectedFile);
+      formData.append('photo', file);
       formData.append('content_type', objectType);
       formData.append('object_id', objectId);
-      formData.append('description', description);
 
-      await axios.post('/api/photos/upload/', formData, {
+      const response = await api.post('/photos/upload/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-        },
+          'Authorization': `Token ${token}`
+        }
       });
-
-      setDescription('');
-      setSelectedFile(null);
-      setError('');
-      fetchPhotos();
-      if (onPhotoAdded) {
-        onPhotoAdded();
-      }
+      console.log('Upload response:', response.data);
+      setPhotos([...photos, response.data]);
+      setError(null);
     } catch (err) {
       setError('Failed to upload photo');
       console.error('Error uploading photo:', err);
@@ -82,112 +71,99 @@ const PhotoUpload = ({ objectType, objectId, onPhotoAdded }) => {
   };
 
   const handleDelete = async (photoId) => {
-    if (window.confirm('Are you sure you want to delete this photo?')) {
-      try {
-        await axios.delete(`/api/photos/${photoId}/`);
-        fetchPhotos();
-      } catch (err) {
-        setError('Failed to delete photo');
-        console.error('Error deleting photo:', err);
-      }
+    try {
+      await api.delete(`/photos/${photoId}/`, {
+        headers: {
+          'Authorization': `Token ${token}`
+        }
+      });
+      setPhotos(photos.filter(photo => photo.id !== photoId));
+      setError(null);
+    } catch (err) {
+      setError('Failed to delete photo');
+      console.error('Error deleting photo:', err);
     }
   };
 
+  if (!objectType || !objectId) {
+    return <div style={{ color: 'red', fontWeight: 'bold' }}>PhotoUpload not rendered: objectType or objectId missing ({String(objectType)}, {String(objectId)})</div>;
+  }
+
+  if (loading) {
+    return <CircularProgress />;
+  }
+
   return (
-    <>
-      <Button variant="outline-primary" onClick={() => setShow(true)}>
-        Photos
-      </Button>
+    <Box>
+      <input
+        accept="image/*"
+        style={{ display: 'none' }}
+        id="photo-upload"
+        type="file"
+        onChange={handleFileSelect}
+        disabled={uploading}
+      />
+      <label htmlFor="photo-upload">
+        <Button
+          variant="contained"
+          component="span"
+          startIcon={<PhotoCamera />}
+          disabled={uploading}
+        >
+          {uploading ? 'Uploading...' : 'Upload Photo'}
+        </Button>
+      </label>
 
-      <Modal show={show} onHide={() => setShow(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Photos</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Upload New Photo</Form.Label>
-              <Form.Control
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Description</Form.Label>
-              <Form.Control
-                type="text"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter photo description"
-              />
-            </Form.Group>
-            {error && <div className="text-danger mb-3">{error}</div>}
+      {error && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+        {photos.map((photo) => (
+          <Box
+            key={photo.id}
+            sx={{
+              position: 'relative',
+              width: 150,
+              height: 150,
+              '&:hover .delete-button': {
+                opacity: 1,
+              },
+            }}
+          >
+            <img
+              src={photo.photo}
+              alt="Uploaded"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                borderRadius: 4,
+              }}
+            />
             <Button
-              variant="primary"
-              onClick={handleUpload}
-              disabled={!selectedFile || uploading}
+              className="delete-button"
+              sx={{
+                position: 'absolute',
+                top: 4,
+                right: 4,
+                opacity: 0,
+                transition: 'opacity 0.2s',
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                },
+              }}
+              onClick={() => handleDelete(photo.id)}
             >
-              {uploading ? (
-                <>
-                  <Spinner
-                    as="span"
-                    animation="border"
-                    size="sm"
-                    role="status"
-                    aria-hidden="true"
-                    className="me-2"
-                  />
-                  Uploading...
-                </>
-              ) : (
-                'Upload'
-              )}
+              <Delete sx={{ color: 'white' }} />
             </Button>
-          </Form>
-
-          <hr />
-
-          {loading ? (
-            <div className="text-center">
-              <Spinner animation="border" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </Spinner>
-            </div>
-          ) : (
-            <div className="row">
-              {photos.map((photo) => (
-                <div key={photo.id} className="col-md-4 mb-3">
-                  <div className="card">
-                    <Image
-                      src={photo.photo}
-                      alt={photo.description || 'Photo'}
-                      className="card-img-top"
-                      style={{ height: '200px', objectFit: 'cover' }}
-                    />
-                    <div className="card-body">
-                      <p className="card-text">{photo.description}</p>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => handleDelete(photo.id)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {photos.length === 0 && (
-                <div className="col-12 text-center">
-                  <p>No photos uploaded yet</p>
-                </div>
-              )}
-            </div>
-          )}
-        </Modal.Body>
-      </Modal>
-    </>
+          </Box>
+        ))}
+      </Box>
+    </Box>
   );
 };
 

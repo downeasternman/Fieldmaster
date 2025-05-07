@@ -6,7 +6,7 @@ class Settings(models.Model):
     sales_tax_rate = models.DecimalField(
         max_digits=5, 
         decimal_places=4,
-        default=0.0825,
+        default=0.055,
         validators=[MinValueValidator(0), MaxValueValidator(1)]
     )
     theme = models.CharField(

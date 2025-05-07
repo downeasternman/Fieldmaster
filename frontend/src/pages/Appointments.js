@@ -22,6 +22,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { format, parseISO } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 const statusOptions = [
   { value: 'scheduled', label: 'Scheduled' },
@@ -55,6 +56,7 @@ function Appointments() {
     priority: 'medium',
     notes: '',
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Fetch appointments, customers, and technicians from API
@@ -254,7 +256,7 @@ function Appointments() {
                   boxShadow: 6
                 }
               }}
-              onClick={() => handleOpen(appointment)}
+              onClick={() => navigate(`/appointments/${appointment.id}`)}
             >
               <CardContent>
                 <Typography variant="h6">

@@ -29,7 +29,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        if (error.response && error.response.status === 401) {
             // Handle unauthorized access
             localStorage.removeItem('token');
             window.location.href = '/login';
@@ -39,21 +39,22 @@ api.interceptors.response.use(
 );
 
 // API endpoints
+export const photos = {
+    getByObject: (objectType, objectId) => api.get(`/photos/by_object/?content_type=${objectType}&object_id=${objectId}`),
+    upload: (data) => api.post('/photos/upload/', data, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    }),
+    delete: (id) => api.delete(`/photos/${id}/`),
+};
+
 export const appointments = {
     getAll: () => api.get('/appointments/'),
     getById: (id) => api.get(`/appointments/${id}/`),
     create: (data) => api.post('/appointments/', data),
     update: (id, data) => api.put(`/appointments/${id}/`, data),
     delete: (id) => api.delete(`/appointments/${id}/`),
-    uploadPhoto: (id, photo) => {
-        const formData = new FormData();
-        formData.append('photo', photo);
-        return api.post(`/appointments/${id}/upload_photo/`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-    },
 };
 
 export const customers = {
@@ -73,7 +74,7 @@ export const technicians = {
 };
 
 export const auth = {
-    login: (credentials) => api.post('/auth/login/', credentials),
+    login: (credentials) => api.post('/auth/token/', credentials),
     logout: () => api.post('/auth/logout/'),
     getCurrentUser: () => api.get('/auth/user/'),
 };

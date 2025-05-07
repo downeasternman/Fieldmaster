@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Form, Alert } from 'react-bootstrap';
+import {
+  Container,
+  Grid,
+  Card,
+  CardContent,
+  Button,
+  TextField,
+  Typography,
+  Alert,
+  Box
+} from '@mui/material';
 import axios from 'axios';
 import PhotoUpload from '../components/PhotoUpload';
 
@@ -62,111 +72,96 @@ const CustomerDetail = () => {
 
   if (!customer) {
     return (
-      <Container className="mt-4">
-        <div>Loading...</div>
+      <Container maxWidth="md" sx={{ mt: 4 }}>
+        <Typography>Loading...</Typography>
       </Container>
     );
   }
 
   return (
-    <Container className="mt-4">
-      <Row>
-        <Col>
-          <h2>Customer Details</h2>
-          {error && <Alert variant="danger">{error}</Alert>}
-          {success && <Alert variant="success">{success}</Alert>}
-        </Col>
-        <Col xs="auto">
-          <Button variant="outline-secondary" onClick={() => navigate('/customers')}>
-            Back to Customers
-          </Button>
-        </Col>
-      </Row>
-
-      <Row className="mt-4">
-        <Col md={8}>
+    <Container maxWidth="md" sx={{ mt: 4 }}>
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Typography variant="h4" gutterBottom>Customer Details</Typography>
+          {error && <Alert severity="error">{error}</Alert>}
+          {success && <Alert severity="success">{success}</Alert>}
+        </Grid>
+        <Grid item xs={12} md={8}>
           <Card>
-            <Card.Body>
-              <Form onSubmit={handleSubmit}>
-                <Form.Group className="mb-3">
-                  <Form.Label>First Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="first_name"
-                    value={formData.first_name}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Last Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="last_name"
-                    value={formData.last_name}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Email</Form.Label>
-                  <Form.Control
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Phone</Form.Label>
-                  <Form.Control
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Address</Form.Label>
-                  <Form.Control
-                    as="textarea"
-                    rows={3}
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </Form.Group>
-
-                <Button type="submit" variant="primary">
-                  Save Changes
-                </Button>
-              </Form>
-            </Card.Body>
+            <CardContent>
+              <form onSubmit={handleSubmit}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="First Name"
+                      name="first_name"
+                      value={formData.first_name}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Last Name"
+                      name="last_name"
+                      value={formData.last_name}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Address"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      multiline
+                      rows={3}
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Button type="submit" variant="contained">Save Changes</Button>
+                  </Grid>
+                </Grid>
+              </form>
+            </CardContent>
           </Card>
-        </Col>
-        <Col md={4}>
+        </Grid>
+        <Grid item xs={12} md={4}>
           <Card>
-            <Card.Body>
-              <Card.Title>Photos</Card.Title>
-              <PhotoUpload
-                objectType="customer"
-                objectId={customer.id}
-                onPhotoAdded={() => {
-                  setSuccess('Photo added successfully');
-                  setTimeout(() => setSuccess(''), 3000);
-                }}
-              />
-            </Card.Body>
+            <CardContent>
+              <Typography variant="h6">Photos</Typography>
+              <div style={{color: 'blue', fontWeight: 'bold'}}>CustomerDetail Rendered: customer.id = {customer?.id}</div>
+              <PhotoUpload objectType="customer" objectId={customer.id} />
+            </CardContent>
           </Card>
-        </Col>
-      </Row>
+        </Grid>
+      </Grid>
     </Container>
   );
 };

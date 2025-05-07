@@ -24,6 +24,7 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, PersonAdd as PersonAddIcon } from '@mui/icons-material';
 import { format, parseISO } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 const Billing = () => {
   const [bills, setBills] = useState([]);
@@ -45,7 +46,7 @@ const Billing = () => {
     line_items: [{ description: '', quantity: 1, unit_price: 0, notes: '' }],
   });
   const [settings, setSettings] = useState({
-    sales_tax_rate: 0.0825
+    sales_tax_rate: 0.055
   });
 
   const billTypes = [
@@ -60,6 +61,8 @@ const Billing = () => {
     { value: 'overdue', label: 'Overdue' },
     { value: 'cancelled', label: 'Cancelled' },
   ];
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchBills();
@@ -102,8 +105,10 @@ const Billing = () => {
   const fetchSettings = async () => {
     try {
       const response = await fetch('http://localhost:8000/api/settings/');
-      const data = await response.json();
-      setSettings(data);
+      if (response.ok) {
+        const data = await response.json();
+        setSettings(data);
+      }
     } catch (error) {
       console.error('Error fetching settings:', error);
     }
@@ -351,19 +356,32 @@ const Billing = () => {
   };
 
   const calculateTotals = (lineItems) => {
+    if (!Array.isArray(lineItems)) {
+      return {
+        subtotal: 0,
+        taxAmount: 0,
+        total: 0
+      };
+    }
+
     const subtotal = lineItems.reduce((sum, item) => {
-      const amount = item.quantity * item.unit_price;
+      const quantity = parseFloat(item.quantity) || 0;
+      const unitPrice = parseFloat(item.unit_price) || 0;
+      const amount = quantity * unitPrice;
       return sum + (isNaN(amount) ? 0 : amount);
     }, 0);
     
     const taxableAmount = lineItems
       .filter(item => item.is_taxable)
       .reduce((sum, item) => {
-        const amount = item.quantity * item.unit_price;
+        const quantity = parseFloat(item.quantity) || 0;
+        const unitPrice = parseFloat(item.unit_price) || 0;
+        const amount = quantity * unitPrice;
         return sum + (isNaN(amount) ? 0 : amount);
       }, 0);
     
-    const taxAmount = taxableAmount * (settings?.sales_tax_rate || 0);
+    const taxRate = parseFloat(settings?.sales_tax_rate) || 0;
+    const taxAmount = taxableAmount * taxRate;
     const total = subtotal + taxAmount;
 
     return {
@@ -403,7 +421,7 @@ const Billing = () => {
                     backgroundColor: 'rgba(0, 0, 0, 0.02)'
                   }
                 }}
-                onClick={() => handleOpenDialog(bill)}
+                onClick={() => navigate(`/billing/${bill.id}`)}
               >
                 <CardContent>
                   <Grid container spacing={2}>

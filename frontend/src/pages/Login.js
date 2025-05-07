@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Container, TextField, Button, Paper, Typography, Alert } from '@mui/material';
-import { auth } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
   const [credentials, setCredentials] = useState({
@@ -9,6 +10,8 @@ function Login() {
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,15 +19,11 @@ function Login() {
     setError(null);
 
     try {
-      const response = await auth.login(credentials);
-      console.log('Login Response:', response.data);
-      // Store token in localStorage
-      localStorage.setItem('token', response.data.token);
-      // Redirect to dashboard
-      window.location.href = '/';
+      await login(credentials);
+      navigate('/');
     } catch (err) {
       console.error('Login Error:', err);
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err.response?.data?.detail || 'Login failed');
     } finally {
       setLoading(false);
     }

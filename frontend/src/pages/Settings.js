@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -16,7 +16,7 @@ import {
   InputLabel,
   FormControl,
 } from '@mui/material';
-import { UserSettingsContext } from '../App';
+import { useUserSettings } from '../contexts/UserSettingsContext';
 
 const FONT_CHOICES = [
   'Roboto', 'Arial', 'Lato', 'Open Sans', 'Montserrat', 'Source Sans Pro',
@@ -24,7 +24,7 @@ const FONT_CHOICES = [
 ];
 
 const Settings = () => {
-  const { userSettings, setUserSettings } = useContext(UserSettingsContext);
+  const { userSettings, setUserSettings } = useUserSettings();
   const [settings, setSettings] = useState({ sales_tax_rate: 0.0825 });
   const [technicians, setTechnicians] = useState([]);
   const [success, setSuccess] = useState(false);

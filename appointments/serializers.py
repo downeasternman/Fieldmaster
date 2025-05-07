@@ -6,8 +6,8 @@ from datetime import datetime
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email', 'password')
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+        read_only_fields = ['id']
 
 class CustomerSerializer(serializers.ModelSerializer):
     photos = serializers.SerializerMethodField()
@@ -65,11 +65,25 @@ class AppointmentPhotoSerializer(serializers.ModelSerializer):
 
 class PhotoSerializer(serializers.ModelSerializer):
     uploaded_by = UserSerializer(read_only=True)
+    photo = serializers.SerializerMethodField()
     
     class Meta:
         model = Photo
         fields = ['id', 'photo', 'description', 'uploaded_at', 'uploaded_by', 'content_type', 'object_id']
         read_only_fields = ['uploaded_at', 'uploaded_by']
+        extra_kwargs = {
+            'photo': {'required': True},
+            'content_type': {'required': True},
+            'object_id': {'required': True}
+        }
+    
+    def get_photo(self, obj):
+        request = self.context.get('request')
+        if obj.photo and hasattr(obj.photo, 'url'):
+            if request is not None:
+                return request.build_absolute_uri(obj.photo.url)
+            return obj.photo.url
+        return None
 
 class AppointmentSerializer(serializers.ModelSerializer):
     customer = CustomerSerializer(read_only=True)

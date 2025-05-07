@@ -15,6 +15,7 @@ import {
   Container,
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
 function Customers() {
   const [customers, setCustomers] = useState([]);
@@ -27,6 +28,7 @@ function Customers() {
     phone: '',
     address: '',
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCustomers();
@@ -132,7 +134,7 @@ function Customers() {
                   backgroundColor: 'rgba(0, 0, 0, 0.02)'
                 }
               }}
-              onClick={() => handleOpen(customer)}
+              onClick={() => navigate(`/customers/${customer.id}`)}
             >
               <CardContent>
                 <Typography variant="h6">
