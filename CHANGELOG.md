@@ -72,6 +72,7 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Improved labor item handling in billing forms
 - Fixed tax calculation for labor items (now non-taxable by default)
 - Fixed technician selection and rate population in labor items
+- Removed phone number validation to allow more flexible phone number formats
 
 ### Changed
 - Updated documentation with Mermaid diagrams and code examples [commit: w4x5y6z]

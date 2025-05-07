@@ -28,6 +28,9 @@ graph TD
 ### 2. Customer Management
 - Comprehensive customer profiles
 - Contact information management
+  - Flexible phone number format support
+  - Email validation
+  - Address storage
 - Service history tracking
 - Support for walk-in/cash customers
 - Quick customer creation from billing interface
