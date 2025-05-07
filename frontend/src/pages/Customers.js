@@ -28,6 +28,7 @@ function Customers() {
     phone: '',
     address: '',
   });
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -68,6 +69,7 @@ function Customers() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     try {
       const url = selectedCustomer
         ? `http://localhost:8000/api/customers/${selectedCustomer.id}/`
@@ -85,8 +87,19 @@ function Customers() {
       if (response.ok) {
         fetchCustomers();
         handleClose();
+      } else {
+        const errorData = await response.json();
+        setError(
+          errorData?.phone?.[0] ||
+          errorData?.email?.[0] ||
+          errorData?.non_field_errors?.[0] ||
+          errorData?.detail ||
+          'Failed to save customer.'
+        );
+        console.error('Error saving customer:', errorData);
       }
     } catch (error) {
+      setError('Error saving customer.');
       console.error('Error saving customer:', error);
     }
   };
@@ -172,6 +185,9 @@ function Customers() {
         </DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent>
+            {error && (
+              <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
+            )}
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -208,6 +224,7 @@ function Customers() {
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   required
+                  helperText="Format: +12345678901 (up to 15 digits)"
                 />
               </Grid>
               <Grid item xs={12}>
