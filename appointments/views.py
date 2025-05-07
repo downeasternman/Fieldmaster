@@ -152,6 +152,15 @@ class PhotoViewSet(viewsets.ModelViewSet):
     serializer_class = PhotoSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def list(self, request, *args, **kwargs):
+        content_type = request.query_params.get('content_type')
+        object_id = request.query_params.get('object_id')
+        queryset = self.get_queryset()
+        if content_type and object_id:
+            queryset = queryset.filter(content_type=content_type, object_id=object_id)
+        serializer = self.get_serializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
     def perform_create(self, serializer):
         serializer.save(uploaded_by=self.request.user)
 
@@ -208,8 +217,10 @@ class PhotoViewSet(viewsets.ModelViewSet):
             'description': description
         }, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        serializer.save(uploaded_by=request.user)
-
+        instance = serializer.save(uploaded_by=request.user)
+        if not instance.photo:
+            instance.photo = photo
+            instance.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class UserViewSet(viewsets.ModelViewSet):

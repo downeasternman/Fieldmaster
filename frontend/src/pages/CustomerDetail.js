@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   Container,
   Grid,
@@ -8,15 +8,13 @@ import {
   Button,
   TextField,
   Typography,
-  Alert,
-  Box
+  Alert
 } from '@mui/material';
 import axios from 'axios';
 import PhotoUpload from '../components/PhotoUpload';
 
 const CustomerDetail = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [customer, setCustomer] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -156,7 +154,6 @@ const CustomerDetail = () => {
           <Card>
             <CardContent>
               <Typography variant="h6">Photos</Typography>
-              <div style={{color: 'blue', fontWeight: 'bold'}}>CustomerDetail Rendered: customer.id = {customer?.id}</div>
               <PhotoUpload objectType="customer" objectId={customer.id} />
             </CardContent>
           </Card>

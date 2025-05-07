@@ -133,6 +133,7 @@ const PhotoUpload = ({ objectType, objectId }) => {
               },
             }}
           >
+            {console.log('DEBUG: Rendering photo with src:', photo.photo)}
             <img
               src={photo.photo}
               alt="Uploaded"

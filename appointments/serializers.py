@@ -18,7 +18,7 @@ class CustomerSerializer(serializers.ModelSerializer):
     
     def get_photos(self, obj):
         photos = Photo.objects.filter(content_type='customer', object_id=obj.id)
-        return PhotoSerializer(photos, many=True).data
+        return PhotoSerializer(photos, many=True, context={'request': self.context.get('request')}).data
 
 class TechnicianSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -80,9 +80,10 @@ class PhotoSerializer(serializers.ModelSerializer):
     def get_photo(self, obj):
         request = self.context.get('request')
         if obj.photo and hasattr(obj.photo, 'url'):
-            if request is not None:
-                return request.build_absolute_uri(obj.photo.url)
-            return obj.photo.url
+            url = request.build_absolute_uri(obj.photo.url) if request is not None else obj.photo.url
+            print(f"DEBUG: Returning photo URL: {url}")
+            return url
+        print("DEBUG: No photo or photo.url for object", obj)
         return None
 
 class AppointmentSerializer(serializers.ModelSerializer):
@@ -109,7 +110,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
     
     def get_photos(self, obj):
         photos = Photo.objects.filter(content_type='appointment', object_id=obj.id)
-        return PhotoSerializer(photos, many=True).data
+        return PhotoSerializer(photos, many=True, context={'request': self.context.get('request')}).data
 
     def create(self, validated_data):
         print("Validated data:", validated_data)  # Debug print
@@ -194,7 +195,7 @@ class BillSerializer(serializers.ModelSerializer):
     
     def get_photos(self, obj):
         photos = Photo.objects.filter(content_type='bill', object_id=obj.id)
-        return PhotoSerializer(photos, many=True).data
+        return PhotoSerializer(photos, many=True, context={'request': self.context.get('request')}).data
 
     def to_internal_value(self, data):
         if 'due_date' in data:

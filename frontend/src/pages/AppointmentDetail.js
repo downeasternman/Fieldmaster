@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   Container,
   Grid,
@@ -16,7 +16,6 @@ import PhotoUpload from '../components/PhotoUpload';
 
 const AppointmentDetail = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [appointment, setAppointment] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [technicians, setTechnicians] = useState([]);
@@ -269,7 +268,6 @@ const AppointmentDetail = () => {
           <Card>
             <CardContent>
               <Typography variant="h6">Photos</Typography>
-              <div style={{color: 'blue', fontWeight: 'bold'}}>AppointmentDetail Rendered: appointment.id = {appointment?.id}</div>
               <PhotoUpload objectType="appointment" objectId={appointment.id} />
             </CardContent>
           </Card>
