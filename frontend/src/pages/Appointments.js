@@ -206,21 +206,6 @@ function Appointments() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this appointment?')) {
-      try {
-        const response = await fetch(`http://localhost:8000/api/appointments/${id}/`, {
-          method: 'DELETE',
-        });
-        if (response.ok) {
-          fetchAppointments();
-        }
-      } catch (error) {
-        console.error('Error deleting appointment:', error);
-      }
-    }
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name === 'start_time' || name === 'end_time') {
@@ -343,7 +328,7 @@ function Appointments() {
                         appointment_date: newValue ? format(newValue, 'yyyy-MM-dd') : ''
                       }));
                     }}
-                    renderInput={(params) => <TextField {...params} fullWidth />}
+                    slotProps={{ textField: { fullWidth: true } }}
                   />
                 </LocalizationProvider>
               </Grid>

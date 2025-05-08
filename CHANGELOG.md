@@ -94,6 +94,9 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Changed all references of 'Part/Employee Number' and 'Employee Number' to 'Employee ID' in the bills table and line item form for clarity [2025-05-20 09:30:00]
 - Cleaned up Technicians page UI: removed duplicate heading and redundant add button; now only one heading and one button remain [2025-05-20 11:45:00]
 
+### Removed
+- Cleaned up unused imports and variables in `frontend/src/pages/Appointments.js` to resolve ESLint warnings and improve code quality. [2025-05-08]
+
 ## [1.0.0-20250501] - 2025-05-01
 
 ### Added
