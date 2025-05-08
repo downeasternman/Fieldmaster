@@ -290,4 +290,18 @@ This project is licensed under the MIT License.
 - Maintains relationship for reporting
 
 ## Technicians Page
-- The Technicians page now displays a single heading and a single 'Add Technician' button above the technician cards for a cleaner UI. 
+- The Technicians page now displays a single heading and a single 'Add Technician' button above the technician cards for a cleaner UI.
+
+## Versioning Scheme
+
+FieldMaster uses a semantic versioning scheme with date suffix:
+
+- Format: `MAJOR.MINOR.PATCH-YYYYMMDD`
+- Example: `1.1.0-20250527`
+
+This scheme combines semantic versioning (MAJOR.MINOR.PATCH) with a date suffix to provide both version information and release timing.
+
+- **MAJOR**: Incremented for incompatible API changes
+- **MINOR**: Incremented for backwards-compatible functionality additions
+- **PATCH**: Incremented for backwards-compatible bug fixes
+- **YYYYMMDD**: Date of release in YYYYMMDD format 
