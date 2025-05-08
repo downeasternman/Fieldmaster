@@ -73,6 +73,7 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Fixed tax calculation for labor items (now non-taxable by default) [2025-05-23 15:05:00]
 - Fixed technician selection and rate population in labor items [2025-05-24 09:20:00]
 - Removed phone number validation to allow more flexible phone number formats [2025-05-24 11:35:00]
+- Fixed bug where line items were not editable when editing a bill or estimate in Billing.js. [2025-05-08]
 
 ### Changed
 - Updated documentation with Mermaid diagrams and code examples [commit: w4x5y6z] [2025-05-15 12:10:00]
