@@ -16,8 +16,14 @@ import {
   TableHead,
   TableRow,
   Paper,
-  MenuItem
+  MenuItem,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material';
 import axios from 'axios';
 import PhotoUpload from '../components/PhotoUpload';
 
@@ -26,8 +32,12 @@ const BillDetail = () => {
   const [bill, setBill] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [appointments, setAppointments] = useState([]);
+  const [technicians, setTechnicians] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [editingLineItemId, setEditingLineItemId] = useState(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [lineItemToDelete, setLineItemToDelete] = useState(null);
   const [formData, setFormData] = useState({
     customer: '',
     appointment: '',
@@ -79,15 +89,40 @@ const BillDetail = () => {
     }
   }, []);
 
+  const fetchTechnicians = useCallback(async () => {
+    try {
+      const response = await axios.get('/api/technicians/');
+      setTechnicians(response.data);
+    } catch (err) {
+      console.error('Error fetching technicians:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchBill();
     fetchCustomers();
     fetchAppointments();
-  }, [id, fetchBill, fetchCustomers, fetchAppointments]);
+    fetchTechnicians();
+  }, [id, fetchBill, fetchCustomers, fetchAppointments, fetchTechnicians]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Sanitize line_items: remove temp_ IDs for new items, ensure required fields, and remove 'bill' field
+      const sanitizedLineItems = formData.line_items.map(item => {
+        const newItem = { ...item };
+        if (typeof newItem.id === 'string' && newItem.id.startsWith('temp_')) {
+          delete newItem.id;
+        }
+        if ('bill' in newItem) {
+          delete newItem.bill;
+        }
+        // Optionally, ensure required fields are present
+        if (!newItem.description) newItem.description = '';
+        if (!newItem.quantity) newItem.quantity = 0;
+        if (!newItem.unit_price) newItem.unit_price = 0;
+        return newItem;
+      });
       await axios.put(`/api/bills/${id}/`, {
         customer_id: formData.customer,
         appointment_id: formData.appointment,
@@ -97,14 +132,20 @@ const BillDetail = () => {
         notes: formData.notes,
         due_date: formData.due_date,
         employee_name: formData.employee_name,
-        line_items: formData.line_items
+        line_items: sanitizedLineItems
       });
       setSuccess('Bill updated successfully');
       setTimeout(() => setSuccess(''), 3000);
       fetchBill();
     } catch (err) {
-      setError('Failed to update bill');
-      console.error('Error updating bill:', err);
+      let errorMsg = 'Failed to update bill';
+      if (err.response && err.response.data) {
+        errorMsg += ': ' + JSON.stringify(err.response.data);
+        console.error('Backend error:', err.response.data);
+      } else {
+        console.error('Error updating bill:', err);
+      }
+      setError(errorMsg);
     }
   };
 
@@ -116,6 +157,67 @@ const BillDetail = () => {
     }));
   };
 
+  const handleLineItemEdit = (lineItemId) => {
+    setEditingLineItemId(lineItemId);
+  };
+
+  const handleLineItemSave = (lineItemId) => {
+    setEditingLineItemId(null);
+    // The line item changes are already in formData, just need to clear edit mode
+  };
+
+  const handleLineItemCancel = () => {
+    setEditingLineItemId(null);
+    // Revert changes by re-fetching the bill
+    fetchBill();
+  };
+
+  const handleLineItemChange = (lineItemId, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      line_items: prev.line_items.map(item =>
+        item.id === lineItemId
+          ? { ...item, [field]: value }
+          : item
+      )
+    }));
+  };
+
+  const handleDeleteLineItem = (lineItem) => {
+    setLineItemToDelete(lineItem);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteLineItem = () => {
+    setFormData(prev => ({
+      ...prev,
+      line_items: prev.line_items.filter(item => item.id !== lineItemToDelete.id)
+    }));
+    setDeleteConfirmOpen(false);
+    setLineItemToDelete(null);
+  };
+
+  const addLineItem = (isLabor = false) => {
+    const newItem = {
+      id: `temp_${Date.now()}`, // Temporary ID for new items
+      description: '',
+      quantity: 1,
+      unit_price: 0,
+      notes: '',
+      is_labor: isLabor,
+      is_taxable: true,
+      technician_id: null,
+      employee_number: '',
+      part_number: ''
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      line_items: [...prev.line_items, newItem]
+    }));
+    setEditingLineItemId(newItem.id);
+  };
+
   if (!bill) {
     return (
       <Container maxWidth="md" sx={{ mt: 4 }}>
@@ -125,16 +227,14 @@ const BillDetail = () => {
   }
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
+    <Container disableGutters sx={{ mt: 4, mb: 4, width: '100vw', position: 'relative' }}>
       <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Typography variant="h4" gutterBottom>Bill Details</Typography>
-          {error && <Alert severity="error">{error}</Alert>}
-          {success && <Alert severity="success">{success}</Alert>}
-        </Grid>
-        <Grid item xs={12} md={8}>
-          <Card>
+        <Grid item xs={12} md={9} sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Card sx={{ width: '100%', flexGrow: 1 }}>
             <CardContent>
+              <Typography variant="h4" gutterBottom>Bill Details</Typography>
+              {error && <Alert severity="error">{error}</Alert>}
+              {success && <Alert severity="success">{success}</Alert>}
               <form onSubmit={handleSubmit}>
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
@@ -246,38 +346,129 @@ const BillDetail = () => {
                   </Grid>
                   <Grid item xs={12}>
                     <Typography variant="h6" gutterBottom>Line Items</Typography>
-                    <TableContainer component={Paper} sx={{ mb: 2 }}>
-                      <Table>
+                    <TableContainer component={Paper} sx={{ width: '100%', overflowX: 'visible', flexGrow: 1 }}>
+                      <Table sx={{ minWidth: '100%' }}>
                         <TableHead>
                           <TableRow>
-                            <TableCell>Description</TableCell>
-                            <TableCell>Quantity</TableCell>
-                            <TableCell>Unit Price</TableCell>
-                            <TableCell>Amount</TableCell>
+                            <TableCell sx={{ minWidth: 300 }}>Description</TableCell>
+                            <TableCell sx={{ minWidth: 120 }}>Part/Employee #</TableCell>
+                            <TableCell sx={{ minWidth: 100 }}>Quantity</TableCell>
+                            <TableCell sx={{ minWidth: 120 }}>Unit Price</TableCell>
+                            <TableCell sx={{ minWidth: 100 }}>Total</TableCell>
+                            <TableCell sx={{ minWidth: 120 }}>Actions</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {formData.line_items.map((item, index) => (
-                            <TableRow key={index}>
-                              <TableCell>{item.description}</TableCell>
-                              <TableCell>{item.quantity}</TableCell>
-                              <TableCell>${item.unit_price}</TableCell>
-                              <TableCell>${(item.quantity * item.unit_price).toFixed(2)}</TableCell>
+                          {formData.line_items.map((item) => (
+                            <TableRow key={item.id}>
+                              {editingLineItemId === item.id ? (
+                                // Edit mode
+                                <>
+                                  <TableCell>
+                                    <TextField
+                                      fullWidth
+                                      value={item.description}
+                                      onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)}
+                                      size="small"
+                                      sx={{ minWidth: 120 }}
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    {item.is_labor ? (
+                                      <TextField
+                                        value={item.employee_number || ''}
+                                        onChange={(e) => handleLineItemChange(item.id, 'employee_number', e.target.value)}
+                                        size="small"
+                                        sx={{ minWidth: 100 }}
+                                      />
+                                    ) : (
+                                      <TextField
+                                        value={item.part_number || ''}
+                                        onChange={(e) => handleLineItemChange(item.id, 'part_number', e.target.value)}
+                                        size="small"
+                                        sx={{ minWidth: 100 }}
+                                      />
+                                    )}
+                                  </TableCell>
+                                  <TableCell>
+                                    <TextField
+                                      type="number"
+                                      value={item.quantity}
+                                      onChange={(e) => handleLineItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
+                                      size="small"
+                                      sx={{ minWidth: 80 }}
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <TextField
+                                      type="number"
+                                      value={item.unit_price}
+                                      onChange={(e) => handleLineItemChange(item.id, 'unit_price', parseFloat(e.target.value) || 0)}
+                                      size="small"
+                                      sx={{ minWidth: 100 }}
+                                    />
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    ${(item.quantity * item.unit_price).toFixed(2)}
+                                  </TableCell>
+                                  <TableCell>
+                                    <IconButton onClick={() => handleLineItemSave(item.id)} color="primary">
+                                      <SaveIcon />
+                                    </IconButton>
+                                    <IconButton onClick={handleLineItemCancel} color="error">
+                                      <CancelIcon />
+                                    </IconButton>
+                                  </TableCell>
+                                </>
+                              ) : (
+                                // Display mode
+                                <>
+                                  <TableCell>{item.description}</TableCell>
+                                  <TableCell>{item.is_labor ? item.employee_number : item.part_number}</TableCell>
+                                  <TableCell align="right">{item.quantity}</TableCell>
+                                  <TableCell align="right">${item.unit_price}</TableCell>
+                                  <TableCell align="right">${(item.quantity * item.unit_price).toFixed(2)}</TableCell>
+                                  <TableCell>
+                                    <IconButton onClick={() => handleLineItemEdit(item.id)} color="primary">
+                                      <EditIcon />
+                                    </IconButton>
+                                    <IconButton onClick={() => handleDeleteLineItem(item)} color="error">
+                                      <DeleteIcon />
+                                    </IconButton>
+                                  </TableCell>
+                                </>
+                              )}
                             </TableRow>
                           ))}
-                        </TableBody>
-                        <TableHead>
                           <TableRow>
-                            <TableCell colSpan={3} align="right"><strong>Total:</strong></TableCell>
-                            <TableCell>
+                            <TableCell colSpan={4} align="right">
+                              <strong>Total:</strong>
+                            </TableCell>
+                            <TableCell align="right">
                               <strong>
                                 ${formData.line_items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0).toFixed(2)}
                               </strong>
                             </TableCell>
+                            <TableCell />
                           </TableRow>
-                        </TableHead>
+                        </TableBody>
                       </Table>
                     </TableContainer>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Button
+                      startIcon={<AddIcon />}
+                      onClick={() => addLineItem(false)}
+                      sx={{ mr: 1 }}
+                    >
+                      Add Item
+                    </Button>
+                    <Button
+                      startIcon={<AddIcon />}
+                      onClick={() => addLineItem(true)}
+                    >
+                      Add Labor
+                    </Button>
                   </Grid>
                   <Grid item xs={12}>
                     <Button type="submit" variant="contained">Save Changes</Button>
@@ -287,8 +478,8 @@ const BillDetail = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={4}>
-          <Card>
+        <Grid item xs={12} md={3}>
+          <Card sx={{ width: '100%' }}>
             <CardContent>
               <Typography variant="h6">Photos</Typography>
               <PhotoUpload objectType="bill" objectId={bill.id} />
@@ -296,6 +487,18 @@ const BillDetail = () => {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete this line item?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+          <Button onClick={confirmDeleteLineItem} color="error">Delete</Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

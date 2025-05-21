@@ -94,23 +94,12 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Enhanced date handling in frontend components [commit: x4y5z6a] [2025-05-19 12:15:00]
 - Changed all references of 'Part/Employee Number' and 'Employee Number' to 'Employee ID' in the bills table and line item form for clarity [2025-05-20 09:30:00]
 - Cleaned up Technicians page UI: removed duplicate heading and redundant add button; now only one heading and one button remain [2025-05-20 11:45:00]
+- Bill Details page now uses full available width, even with sidebar present.
+- Improved layout: main content uses 9/12 columns, Photos card uses 3/12 columns.
+- Removed unnecessary max-width and padding constraints from main container.
+- Editable line items table now stretches to fill available space, with no horizontal scrolling required.
+- Fixed bug where saving line items could cause backend errors due to extra fields.
+- Improved error handling and feedback for save operations.
 
 ### Removed
-- Cleaned up unused imports and variables in `frontend/src/pages/Appointments.js` to resolve ESLint warnings and improve code quality. [2025-05-08]
-
-## [1.0.0-20250501] - 2025-05-01
-
-### Added
-- Initial project structure [commit: w3x4y5z] [2025-05-01 09:00:00]
-- Django backend setup [commit: a6b7c8d] [2025-05-01 10:15:00]
-- React frontend setup [commit: e9f0g1h] [2025-05-01 11:30:00]
-- Basic documentation [commit: i2j3k4l] [2025-05-01 13:45:00]
-
-## [1.1.0-20250527] - 2025-05-27
-### Fixed
-- Uploaded photos now only appear on the correct customer, appointment, or bill detail page [2025-05-27 14:20:00]
-- Backend now saves uploaded files to the correct model field [2025-05-27 15:35:00]
-
-### Improved
-- Filtering logic for photos in API and serializers [2025-05-27 16:50:00]
-- Linting and UI/UX consistency across detail pages [2025-05-27 17:05:00] 
+- Cleaned up unused imports and variables in `
