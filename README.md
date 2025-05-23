@@ -29,7 +29,7 @@ This repository contains:
 - Track technician availability
 - Assign technicians to appointments
 - View technician performance
-- **Sidebar navigation now uses an Engineering icon for Technicians for better clarity**
+- Sidebar navigation now uses an Engineering icon for Technicians for better clarity
 
 ### Billing System
 - Create bills and estimates
