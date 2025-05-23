@@ -118,161 +118,173 @@ const AppointmentDetail = () => {
   }
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Typography variant="h4" gutterBottom>Appointment Details</Typography>
-          {error && <Alert severity="error">{error}</Alert>}
-          {success && <Alert severity="success">{success}</Alert>}
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <style>{`
+        @media print {
+          .MuiAppBar-root, .MuiDrawer-root, .MuiButton-root.print-btn { display: none !important; }
+          body { background: white !important; }
+          .print-area { width: 100vw !important; margin: 0 !important; }
+        }
+      `}</style>
+      <Button className="print-btn" variant="outlined" sx={{ mb: 2 }} onClick={() => window.print()}>
+        Print
+      </Button>
+      <div className="print-area">
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Typography variant="h4" gutterBottom>Appointment Details</Typography>
+            {error && <Alert severity="error">{error}</Alert>}
+            {success && <Alert severity="success">{success}</Alert>}
+          </Grid>
+          <Grid item xs={12} md={8}>
+            <Card>
+              <CardContent>
+                <form onSubmit={handleSubmit}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        select
+                        fullWidth
+                        label="Customer"
+                        name="customer"
+                        value={formData.customer}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <MenuItem value="">Select Customer</MenuItem>
+                        {customers.map(customer => (
+                          <MenuItem key={customer.id} value={customer.id}>
+                            {customer.first_name} {customer.last_name}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        select
+                        fullWidth
+                        label="Technician"
+                        name="technician"
+                        value={formData.technician}
+                        onChange={handleInputChange}
+                      >
+                        <MenuItem value="">Select Technician</MenuItem>
+                        {technicians.map(technician => (
+                          <MenuItem key={technician.id} value={technician.id}>
+                            {technician.user.first_name} {technician.user.last_name}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Date"
+                        name="appointment_date"
+                        type="date"
+                        value={formData.appointment_date}
+                        onChange={handleInputChange}
+                        InputLabelProps={{ shrink: true }}
+                        required
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={3}>
+                      <TextField
+                        fullWidth
+                        label="Start Time"
+                        name="start_time"
+                        type="time"
+                        value={formData.start_time}
+                        onChange={handleInputChange}
+                        InputLabelProps={{ shrink: true }}
+                        required
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={3}>
+                      <TextField
+                        fullWidth
+                        label="End Time"
+                        name="end_time"
+                        type="time"
+                        value={formData.end_time}
+                        onChange={handleInputChange}
+                        InputLabelProps={{ shrink: true }}
+                        required
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Description"
+                        name="description"
+                        value={formData.description}
+                        onChange={handleInputChange}
+                        multiline
+                        rows={2}
+                        required
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        select
+                        fullWidth
+                        label="Status"
+                        name="status"
+                        value={formData.status}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <MenuItem value="scheduled">Scheduled</MenuItem>
+                        <MenuItem value="in_progress">In Progress</MenuItem>
+                        <MenuItem value="completed">Completed</MenuItem>
+                        <MenuItem value="cancelled">Cancelled</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        select
+                        fullWidth
+                        label="Priority"
+                        name="priority"
+                        value={formData.priority}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <MenuItem value="low">Low</MenuItem>
+                        <MenuItem value="medium">Medium</MenuItem>
+                        <MenuItem value="high">High</MenuItem>
+                        <MenuItem value="emergency">Emergency</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Notes"
+                        name="notes"
+                        value={formData.notes}
+                        onChange={handleInputChange}
+                        multiline
+                        rows={2}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Button type="submit" variant="contained">Save Changes</Button>
+                    </Grid>
+                  </Grid>
+                </form>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6">Photos</Typography>
+                <PhotoUpload objectType="appointment" objectId={appointment.id} />
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={8}>
-          <Card>
-            <CardContent>
-              <form onSubmit={handleSubmit}>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      select
-                      fullWidth
-                      label="Customer"
-                      name="customer"
-                      value={formData.customer}
-                      onChange={handleInputChange}
-                      required
-                    >
-                      <MenuItem value="">Select Customer</MenuItem>
-                      {customers.map(customer => (
-                        <MenuItem key={customer.id} value={customer.id}>
-                          {customer.first_name} {customer.last_name}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      select
-                      fullWidth
-                      label="Technician"
-                      name="technician"
-                      value={formData.technician}
-                      onChange={handleInputChange}
-                    >
-                      <MenuItem value="">Select Technician</MenuItem>
-                      {technicians.map(technician => (
-                        <MenuItem key={technician.id} value={technician.id}>
-                          {technician.user.first_name} {technician.user.last_name}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="Date"
-                      name="appointment_date"
-                      type="date"
-                      value={formData.appointment_date}
-                      onChange={handleInputChange}
-                      InputLabelProps={{ shrink: true }}
-                      required
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={3}>
-                    <TextField
-                      fullWidth
-                      label="Start Time"
-                      name="start_time"
-                      type="time"
-                      value={formData.start_time}
-                      onChange={handleInputChange}
-                      InputLabelProps={{ shrink: true }}
-                      required
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={3}>
-                    <TextField
-                      fullWidth
-                      label="End Time"
-                      name="end_time"
-                      type="time"
-                      value={formData.end_time}
-                      onChange={handleInputChange}
-                      InputLabelProps={{ shrink: true }}
-                      required
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Description"
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      multiline
-                      rows={2}
-                      required
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      select
-                      fullWidth
-                      label="Status"
-                      name="status"
-                      value={formData.status}
-                      onChange={handleInputChange}
-                      required
-                    >
-                      <MenuItem value="scheduled">Scheduled</MenuItem>
-                      <MenuItem value="in_progress">In Progress</MenuItem>
-                      <MenuItem value="completed">Completed</MenuItem>
-                      <MenuItem value="cancelled">Cancelled</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      select
-                      fullWidth
-                      label="Priority"
-                      name="priority"
-                      value={formData.priority}
-                      onChange={handleInputChange}
-                      required
-                    >
-                      <MenuItem value="low">Low</MenuItem>
-                      <MenuItem value="medium">Medium</MenuItem>
-                      <MenuItem value="high">High</MenuItem>
-                      <MenuItem value="emergency">Emergency</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Notes"
-                      name="notes"
-                      value={formData.notes}
-                      onChange={handleInputChange}
-                      multiline
-                      rows={2}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Button type="submit" variant="contained">Save Changes</Button>
-                  </Grid>
-                </Grid>
-              </form>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6">Photos</Typography>
-              <PhotoUpload objectType="appointment" objectId={appointment.id} />
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      </div>
     </Container>
   );
 };

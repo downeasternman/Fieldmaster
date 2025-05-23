@@ -36,6 +36,8 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Employee number tracking for labor items [2025-05-26 13:25:00]
 - Taxable/non-taxable item support with automatic tax handling for labor items [2025-05-26 15:40:00]
 - Enhanced line item management with part numbers and employee numbers [2025-05-27 10:05:00]
+- Print button to Appointment and Bill detail pages, with print-friendly layout (hides navigation and non-essential UI).
+- Appointment cards in the Appointments page are now clickable and navigate to the detail page.
 
 ### Fixed
 - Added missing React frontend files (index.html, manifest.json, index.js, reportWebVitals.js) [commit: s3t4u5v] [2025-05-15 11:55:00]

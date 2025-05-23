@@ -84,7 +84,18 @@ function Dashboard() {
   }));
 
   const eventStyleGetter = (event) => {
-    let backgroundColor = '#3174ad';
+    // Priority color coding
+    let backgroundColor = '#3174ad'; // default
+    if (event.priority === 'emergency') {
+      backgroundColor = '#d32f2f'; // red
+    } else if (event.priority === 'high') {
+      backgroundColor = '#f57c00'; // orange
+    } else if (event.priority === 'medium') {
+      backgroundColor = '#1976d2'; // blue
+    } else if (event.priority === 'low') {
+      backgroundColor = '#388e3c'; // green
+    }
+    // Status overrides (completed/cancelled/in_progress)
     if (event.status === 'completed') {
       backgroundColor = '#28a745';
     } else if (event.status === 'cancelled') {
@@ -92,7 +103,6 @@ function Dashboard() {
     } else if (event.status === 'in_progress') {
       backgroundColor = '#ffc107';
     }
-
     return {
       style: {
         backgroundColor,
