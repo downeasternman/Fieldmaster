@@ -107,3 +107,10 @@ All notable changes to the FieldMaster project will be documented in this file.
 
 ### Removed
 - Cleaned up unused imports and variables in `
+
+## [0.1.0] - 2025-05-23
+### Added
+- Fieldmaster is now a Progressive Web App (PWA) with offline support and installability.
+- Added service worker and manifest for PWA compliance.
+- Service worker caches static assets and provides offline fallback.
+- Ready for mobile-friendly UI refactor in next version.

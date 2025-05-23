@@ -304,4 +304,10 @@ This scheme combines semantic versioning (MAJOR.MINOR.PATCH) with a date suffix 
 - **MAJOR**: Incremented for incompatible API changes
 - **MINOR**: Incremented for backwards-compatible functionality additions
 - **PATCH**: Incremented for backwards-compatible bug fixes
-- **YYYYMMDD**: Date of release in YYYYMMDD format 
+- **YYYYMMDD**: Date of release in YYYYMMDD format
+
+## Version 0.1.0 (2025-05-23): PWA Foundation
+- Fieldmaster is now a Progressive Web App (PWA).
+- Service worker caches static assets and provides offline fallback.
+- App is installable on mobile and desktop ("Add to Home Screen").
+- To test: Build and serve the app, open in Chrome, and use Lighthouse to verify PWA compliance and offline support. 

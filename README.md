@@ -179,4 +179,14 @@ For detailed documentation, please refer to:
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Version
+
+![Version](https://img.shields.io/badge/version-0.1.0-blue)
+
+## PWA Support
+- Fieldmaster is now a Progressive Web App (PWA).
+- Installable on mobile and desktop ("Add to Home Screen").
+- Works offline with service worker caching.
+- Ready for mobile-friendly UI improvements in the next release. 
