@@ -2,6 +2,13 @@
 
 FieldMaster is a comprehensive field service management system designed to streamline appointment scheduling, customer management, and billing operations.
 
+## Monorepo Overview
+
+This repository contains:
+- **Frontend:** React + Material-UI app (`frontend/`)
+- **Django Backend:** Handles core business logic, appointments, and billing (`fieldmaster/`, `appointments/`)
+- **Node/Express Backend:** REST API for bills, customers, appointments, technicians, and settings (`backend/`)
+
 ## Features
 
 ### Appointment Management
@@ -42,12 +49,15 @@ FieldMaster is a comprehensive field service management system designed to strea
 
 ## Technology Stack
 
-- **Backend**
+- **Backend (Django):**
   - Django
   - Django REST Framework
   - PostgreSQL
-
-- **Frontend**
+- **Backend (Node/Express):**
+  - Node.js
+  - Express
+  - PostgreSQL
+- **Frontend:**
   - React
   - Material-UI
   - Axios for API communication
@@ -67,7 +77,7 @@ git clone https://github.com/yourusername/fieldmaster.git
 cd fieldmaster
 ```
 
-2. Set up the backend:
+2. Set up the Django backend:
 ```bash
 # Create and activate virtual environment
 python -m venv venv
@@ -83,16 +93,25 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-3. Set up the frontend:
+3. Set up the Node/Express backend:
+```bash
+cd backend
+npm install
+# Create .env file as described in backend/README.md
+npm run dev
+```
+
+4. Set up the frontend:
 ```bash
 cd frontend
 npm install
 npm start
 ```
 
-4. Access the application:
+5. Access the application:
 - Frontend: http://localhost:3000
-- Backend API: http://localhost:8000/api
+- Django Backend API: http://localhost:8000/api
+- Node/Express API: http://localhost:8000 (or as configured)
 
 ## Usage
 
@@ -116,11 +135,32 @@ npm start
 
 ## Project Structure
 ```
-fieldmaster/
-├── frontend/           # React frontend
-├── appointments/       # Django app for appointments
-├── manage.py          # Django management script
-└── requirements.txt   # Python dependencies
+Fieldmaster2/
+├── backend/                # Node/Express backend API
+│   ├── src/
+│   │   ├── models/
+│   │   ├── controllers/
+│   │   ├── routes/
+│   │   ├── config/
+│   │   └── index.js
+│   ├── package.json
+│   └── README.md
+├── fieldmaster/            # Django project (settings, URLs, WSGI)
+├── appointments/           # Django app for appointments
+├── frontend/               # React frontend
+│   ├── public/
+│   ├── src/
+│   │   ├── pages/
+│   │   ├── components/
+│   │   ├── contexts/
+│   │   └── services/
+│   └── package.json
+├── requirements.txt        # Python dependencies
+├── manage.py               # Django management script
+├── README.md               # Main documentation
+├── documentation.md        # Technical docs
+├── ROADMAP.md              # Development roadmap
+└── CHANGELOG.md            # Release notes
 ```
 
 ## Documentation

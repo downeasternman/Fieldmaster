@@ -101,6 +101,7 @@ All notable changes to the FieldMaster project will be documented in this file.
 - Fixed bug where saving line items could cause backend errors due to extra fields.
 - Improved error handling and feedback for save operations.
 - Navigation redesign: Removed duplicate navigation links from top bar. Top bar now only shows branding (FieldMaster) and Logout button. Sidebar is now the sole navigation for all main sections.
+- Improved and corrected README.md: clarified monorepo structure, updated setup instructions, and revised project structure for accuracy.
 
 ### Removed
 - Cleaned up unused imports and variables in `

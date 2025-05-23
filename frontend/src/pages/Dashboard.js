@@ -14,6 +14,7 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { appointments as appointmentsApi } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const localizer = momentLocalizer(moment);
 
@@ -28,6 +29,7 @@ function Dashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -73,6 +75,7 @@ function Dashboard() {
   }
 
   const events = appointments.map(appointment => ({
+    id: appointment.id,
     title: `${appointment.customer.first_name} ${appointment.customer.last_name}`,
     start: new Date(`${appointment.appointment_date}T${appointment.start_time}`),
     end: new Date(`${appointment.appointment_date}T${appointment.end_time}`),
@@ -167,6 +170,7 @@ function Dashboard() {
           endAccessor="end"
           style={{ height: 500 }}
           eventPropGetter={eventStyleGetter}
+          onSelectEvent={(event) => navigate(`/appointments/${event.id}`)}
         />
       </Paper>
     </Container>
