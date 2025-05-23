@@ -29,7 +29,7 @@ This repository contains:
 - Track technician availability
 - Assign technicians to appointments
 - View technician performance
-- **Sidebar navigation now uses an Engineering icon for Technicians for better clarity**
+- Sidebar navigation now uses an Engineering icon for Technicians for better clarity
 
 ### Billing System
 - Create bills and estimates
@@ -189,4 +189,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Fieldmaster is now a Progressive Web App (PWA).
 - Installable on mobile and desktop ("Add to Home Screen").
 - Works offline with service worker caching.
-- Ready for mobile-friendly UI improvements in the next release. 
+- Ready for mobile-friendly UI improvements in the next release.
