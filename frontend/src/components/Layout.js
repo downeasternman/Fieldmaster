@@ -97,15 +97,10 @@ const Layout = () => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             FieldMaster
           </Typography>
-          <Button color="inherit" onClick={() => navigate('/')}>Dashboard</Button>
-          <Button color="inherit" onClick={() => navigate('/customers')}>Customers</Button>
-          <Button color="inherit" onClick={() => navigate('/appointments')}>Appointments</Button>
-          <Button color="inherit" onClick={() => navigate('/billing')}>Billing</Button>
-          <Button color="inherit" onClick={() => navigate('/settings')}>Settings</Button>
-          <Button color="inherit" onClick={handleLogout}>Logout</Button>
+          <Button color="inherit" onClick={handleLogout} sx={{ ml: 'auto' }}>Logout</Button>
         </Toolbar>
       </AppBar>
       <Box
